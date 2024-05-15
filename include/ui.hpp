@@ -122,7 +122,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 // scroll left and put the new values in
                 for(int y = 0; y<m_spectro.dimensions().height;++y) {
                     memmove(p,p+2,stride-2);
-                    *(uint16_t*)&p[stride-2]=m_palette[(size_t)m_fft[y]].value();
+                    *(uint16_t*)&p[stride-2]=m_palette[(size_t)m_fft[m_spectro.dimensions().height-y-1]].value();
                     p+=stride;
                 }
             }
@@ -168,7 +168,10 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 }
             } else {
                 // spectrogram
-                gfx::draw::bitmap(destination,m_spectro.bounds().offset(0,destination.dimensions().height/2),m_spectro,m_spectro.bounds(),gfx::bitmap_resize::crop,nullptr);
+                gfx::rect16 clip2 = (gfx::rect16)clip.offset(0,-destination.dimensions().height/2);
+                //gfx::srect16 srcr = (gfx::srect16)m_spectro.bounds();
+
+                gfx::draw::bitmap(destination,(gfx::rect16)((gfx::srect16)m_spectro.bounds().offset(0,destination.dimensions().height/2)).crop(clip),m_spectro,clip2,gfx::bitmap_resize::crop,nullptr,nullptr);
             }
         }
         const float x_step = (float)destination.dimensions().width / (float)window_size;
