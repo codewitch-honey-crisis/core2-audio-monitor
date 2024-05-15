@@ -181,7 +181,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                                         y_offset + m_samples_buffer[i - 4] * 3,
                                         sample_x + x_step * 4,
                                         y_offset + m_samples_buffer[i] * 3),
-                            gfx::color<gfx::rgb_pixel<16>>::cyan);
+                            gfx::rgb_pixel<16>(0xfff,true));
             sample_x += x_step * 4;
         }
     }
