@@ -122,7 +122,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 // scroll left and put the new values in
                 for(int y = 0; y<m_spectrogram.dimensions().height;++y) {
                     memmove(p,p+2,stride-2);
-                    *(uint16_t*)&p[stride-2]=m_palette[(size_t)m_fft[m_spectrogram.dimensions().height-y-1]].value();
+                    *(uint16_t*)&p[stride-2]=m_palette[std::max(0, std::min(255, (int)m_fft[m_spectrogram.dimensions().height-y-1]))].value();
                     p+=stride;
                 }
             }
