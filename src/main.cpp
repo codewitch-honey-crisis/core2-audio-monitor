@@ -1,9 +1,15 @@
+#if __has_include(<Arduino.h>)
+#include <Arduino.h>
+#define I2C_INTERNAL Wire1
+#else
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#define I2C_INTERNAL I2C_NUM_1
+#endif
 #include "i2s_sampler.hpp"
 #include "processor.hpp"
 #include "ui.hpp"
-#include <Arduino.h>
 #include <driver/gpio.h>
-#include <driver/i2s.h>
 #include <driver/spi_master.h>
 #include <esp_lcd_panel_ili9342.h>
 #include <esp_lcd_panel_io.h>
@@ -11,13 +17,45 @@
 #include <esp_lcd_panel_vendor.h>
 #include <ft6336.hpp>
 #include <m5core2_power.hpp>
-arduino::ft6336<320, 280> touch(Wire1);
-m5core2_power power;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+#include <driver/i2s_pdm.h>
+#else
+#include <driver/i2s.h>
+#endif
+#ifdef ARDUINO
+using namespace arduino;
+#else
+using namespace esp_idf;
+static uint32_t millis() {
+    return ((uint32_t)pdTICKS_TO_MS(xTaskGetTickCount()));
+}
+#endif
+static ft6336<320, 280> touch(I2C_INTERNAL);
+static m5core2_power power;
 // approx 30ms of audio @ 16KHz
 #define WINDOW_SIZE 512
-
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
+i2s_pdm_rx_config_t pdm_rx_cfg = {
+    .clk_cfg = I2S_PDM_RX_CLK_DEFAULT_CONFIG(64000),
+    /* The default mono slot is the left slot (whose 'select pin' of the PDM microphone is pulled down) */
+    .slot_cfg = { 
+    .data_bit_width = I2S_DATA_BIT_WIDTH_16BIT,
+    .slot_bit_width = I2S_SLOT_BIT_WIDTH_AUTO,
+    .slot_mode = I2S_SLOT_MODE_MONO,
+    .slot_mask = I2S_PDM_SLOT_RIGHT,
+    },
+    .gpio_cfg = {
+        .clk = GPIO_NUM_12,
+        .din = GPIO_NUM_34,
+        .invert_flags = {
+            .clk_inv = false,
+        },
+    },
+};
+#else
 // i2s config for reading from both m5stack mic
-i2s_config_t i2s_config = {
+static i2s_config_t i2s_config = {
     .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
     .sample_rate = 64000,
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
@@ -29,15 +67,23 @@ i2s_config_t i2s_config = {
 };
 
 // i2s pins
-i2s_pin_config_t i2s_pins = {.bck_io_num = GPIO_NUM_12,
-                             .ws_io_num = GPIO_NUM_0,
-                             .data_out_num = I2S_PIN_NO_CHANGE,
-                             .data_in_num = GPIO_NUM_34};
-
-esp_lcd_panel_handle_t lcd_handle;
+static i2s_pin_config_t i2s_pins = {
+                            .mck_io_num = I2S_PIN_NO_CHANGE,
+                            .bck_io_num = GPIO_NUM_12,
+                            .ws_io_num = GPIO_NUM_0,
+                            .data_out_num = I2S_PIN_NO_CHANGE,
+                            .data_in_num = GPIO_NUM_34
+};
+#endif
+static esp_lcd_panel_handle_t lcd_handle;
 // use two 32KB buffers (DMA)
 static uint8_t lcd_transfer_buffer1[32 * 1024];
 static uint8_t lcd_transfer_buffer2[32 * 1024];
+
+static i2s_sampler<WINDOW_SIZE> main_sampler;
+static processor<WINDOW_SIZE> main_processor;
+static TaskHandle_t processing_task_handle;
+static TaskHandle_t drawing_task_handle;
 
 // the screen/control definitions
 screen_t main_screen({320, 240},
@@ -70,11 +116,11 @@ static void lcd_on_touch(gfx::point16 *out_locations, size_t *in_out_locations_s
     *in_out_locations_size = 0;
     uint16_t x, y;
     if (touch.xy(&x, &y)) {
-        // Serial.printf("xy: (%d,%d)\n",x,y);
+        // printf("xy: (%d,%d)\n",x,y);
         out_locations[0] = gfx::point16(x, y);
         ++*in_out_locations_size;
         if (touch.xy2(&x, &y)) {
-            // Serial.printf("xy2: (%d,%d)\n",x,y);
+            // printf("xy2: (%d,%d)\n",x,y);
             out_locations[1] = gfx::point16(x, y);
             ++*in_out_locations_size;
         }
@@ -115,7 +161,10 @@ static void lcd_panel_init() {
     panel_config.bits_per_pixel = 16;
 
     // Initialize the LCD configuration
-    esp_lcd_new_panel_ili9342(io_handle, &panel_config, &lcd_handle);
+    if(ESP_OK!=esp_lcd_new_panel_ili9342(io_handle, &panel_config, &lcd_handle)) {
+        printf("Error initializing LCD panel.\n");
+        while(1);
+    }
 
     // Reset the display
     esp_lcd_panel_reset(lcd_handle);
@@ -130,16 +179,12 @@ static void lcd_panel_init() {
     esp_lcd_panel_invert_color(lcd_handle, true);
     // Turn on the screen
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-    esp_lcd_panel_disp_on_off(lcd_handle, true);
+    esp_lcd_panel_disp_on_off(lcd_handle, false);
 #else
     esp_lcd_panel_disp_off(lcd_handle, false);
 #endif
 }
 static void processing_task(void *param);
-i2s_sampler<WINDOW_SIZE> main_sampler;
-processor<WINDOW_SIZE> main_processor;
-TaskHandle_t processing_task_handle;
-TaskHandle_t drawing_task_handle;
 
 static void processing_task(void *param) {
     const TickType_t xMaxBlockTime = pdMS_TO_TICKS(100);
@@ -174,7 +219,7 @@ static void drawing_task(void *param) {
             ++frames;
             if(millis()>=fps_ts+1000) {
                 fps_ts = millis();
-                Serial.printf("FPS: %d / Avg: %dms\n",frames,frames>0?ms/frames:-1);
+                printf("FPS: %d / Avg: %lums\n",frames,frames>0?ms/frames:-1);
                 frames = 0;
                 ms = 0;
             }
@@ -182,14 +227,19 @@ static void drawing_task(void *param) {
             xTaskNotify(drawing_task_handle, 0, eSetValueWithOverwrite);
         }
     }
+    
 }
-
+#ifdef ARDUINO
 void setup() {
     Serial.begin(115200);
+#else
+extern "C" void app_main() {
+#endif
     power.initialize();
-    lcd_panel_init();
     power.lcd_voltage(3);
+    lcd_panel_init();
     touch.initialize();
+    //main_screen.background_color(gfx::color<typename screen_t::pixel_type>::purple);
     main_screen.on_flush_callback(lcd_on_flush);
     main_screen.on_touch_callback(lcd_on_touch);
     main_analyzer.bounds(main_screen.bounds());
@@ -197,12 +247,25 @@ void setup() {
     // create a processing task to update the sample stream/fft
     xTaskCreatePinnedToCore(
         processing_task, "Processing Task", 4096, nullptr, 2, &processing_task_handle, 0);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0) 
+    main_sampler.initialize(I2S_NUM_0, chan_cfg, pdm_rx_cfg, processing_task_handle);
+#else
     main_sampler.initialize(I2S_NUM_0, i2s_pins, i2s_config, processing_task_handle);
+#endif
     // create a drawing task to update our UI
     xTaskCreatePinnedToCore(
         drawing_task, "Drawing Task", 4096, nullptr, 1, &drawing_task_handle, 1);
+#ifndef ARDUINO
+    int count=0;
+    while(1) {
+        if(count++==10) {
+            vTaskDelay(5);
+            count = 0;
+        }
+    }
+#endif
 }
 
 void loop() {
-    // service the application
+    // do nothing
 }

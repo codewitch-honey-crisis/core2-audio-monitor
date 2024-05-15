@@ -12,6 +12,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     using palette_type = typename base_type::palette_type;
     using bitmap_type = gfx::bitmap<pixel_type, palette_type>;
     static constexpr const size_t window_size = WindowSize;
+   private:
     float m_samples[window_size];
     float m_samples_buffer[window_size];
     float m_fft[window_size];
@@ -20,7 +21,10 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     bitmap_type m_spectrogram;
     gfx::rgb_pixel<16> m_palette[256];
     int m_state = 0;
-
+    static void* psram_alloc(size_t size) {
+        return heap_caps_malloc(size,MALLOC_CAP_SPIRAM);
+    }
+   public:
     analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
         : base_type(parent, palette), m_spectrogram({0,0},nullptr) {
         for (int i = 0; i < window_size; i++) {
@@ -95,7 +99,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 gfx::convert(px24, &px16);
                 m_palette[i] = px16;
             }
-            m_spectrogram=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2),nullptr,ps_malloc);
+            m_spectrogram=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2),nullptr,psram_alloc);
             m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,true));
             m_state = 1;
         }
@@ -141,7 +145,6 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         }
     }
     virtual void on_paint(control_surface_type &destination, const gfx::srect16 &clip) override {
-        using color_t = gfx::color<typename control_surface_type::pixel_type>;
         if (clip.intersects(gfx::srect16(0, 0, destination.bounds().x2, destination.bounds().y2)
                                 .offset(0, destination.dimensions().height / 2)))
         {

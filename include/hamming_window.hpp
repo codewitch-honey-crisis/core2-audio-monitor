@@ -1,5 +1,7 @@
+#pragma once
 #include <stddef.h>
 #include <inttypes.h>
+#include <math.h>
 template<size_t WindowSize = 512> class hamming_window {
  private:
   float m_coefficients[WindowSize];
