@@ -35,12 +35,10 @@ template<size_t WindowSize = 512> class processor {
     // initialise kiss fftr
     m_cfg = kiss_fftr_alloc(fft_size, false, 0, 0);
 
-    // m_fft_input = static_cast<float *>(malloc(sizeof(float) * m_fft_size));
     for (int i = 0; i < fft_size; i++) {
       m_samples[i] = 0;
     }
-    // int energy_size = m_fft_size / 2;
-    // m_fft_output = static_cast<kiss_fft_cpx *>(malloc(sizeof(kiss_fft_cpx) * energy_size));
+   
   }
   void update(const int16_t *samples)
   {
