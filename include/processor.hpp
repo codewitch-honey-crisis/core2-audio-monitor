@@ -20,14 +20,14 @@ template<size_t WindowSize = 512> class processor {
  public:
   static constexpr const size_t fft_size = compute_fft_size();
   static constexpr const size_t window_size = WindowSize;
-  float m_energy[window_size / 4];
-  float m_fft_input[fft_size];
-  const float *energy() const
+  float m_fft[window_size / 4];
+  float m_samples[fft_size];
+  const float *fft() const
   {
-    return m_energy;
+    return m_fft;
   }
   const float* samples() const {
-    return m_fft_input;
+    return m_samples;
   }
   processor()
   {
@@ -37,7 +37,7 @@ template<size_t WindowSize = 512> class processor {
 
     // m_fft_input = static_cast<float *>(malloc(sizeof(float) * m_fft_size));
     for (int i = 0; i < fft_size; i++) {
-      m_fft_input[i] = 0;
+      m_samples[i] = 0;
     }
     // int energy_size = m_fft_size / 2;
     // m_fft_output = static_cast<kiss_fft_cpx *>(malloc(sizeof(kiss_fft_cpx) * energy_size));
@@ -49,7 +49,7 @@ template<size_t WindowSize = 512> class processor {
 
     for (int i = 0; i < window_size; i++) {
       const float input_sample = samples[i] / 30.0f;
-      m_fft_input[offset + i] = input_sample;
+      m_samples[offset + i] = input_sample;
       input_avg += double(input_sample) / double(window_size);
     }
 
@@ -58,19 +58,19 @@ template<size_t WindowSize = 512> class processor {
     // sampling window. This does mean that signals with periods longer than the
     // sampling window will be negatively affected.
     for (int i = 0; i < window_size; i++) {
-      m_fft_input[offset + i] -= input_avg;
+      m_samples[offset + i] -= input_avg;
     }
 
     // apply the hamming window
-    m_hamming_window.apply(m_fft_input);
+    m_hamming_window.apply(m_samples);
 
     // do the fft
-    kiss_fftr(m_cfg, m_fft_input, m_fft_output);
+    kiss_fftr(m_cfg, m_samples, m_fft_output);
 
     for (int i = 0; i < window_size / 4; i++) {
       const float real = m_fft_output[i].r;
       const float imag = m_fft_output[i].i;
-      m_energy[i] = sqrtf((real * real) + (imag * imag));
+      m_fft[i] = sqrtf((real * real) + (imag * imag));
     }
   }
 };

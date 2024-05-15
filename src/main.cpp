@@ -150,7 +150,7 @@ static void processing_task(void *param) {
             const int16_t *input = main_sampler.buffer();
             main_processor.update(input);
             main_analyzer.samples(main_processor.samples());
-            main_analyzer.fft(main_processor.energy());
+            main_analyzer.fft(main_processor.fft());
             xTaskNotify(processing_task_handle, 0, eSetValueWithOverwrite);
             xTaskNotify(drawing_task_handle, 1, eSetValueWithOverwrite);
         }
