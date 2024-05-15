@@ -2,6 +2,8 @@
 
 An adaptation and simplification using UIX and the ESP LCD Panel API
 
+by honey the codewitch
+
 Adapted from
 # M5Stack Core 2 Audio
 
