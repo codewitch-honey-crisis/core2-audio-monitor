@@ -169,8 +169,6 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             } else {
                 // spectrogram
                 gfx::rect16 clip2 = (gfx::rect16)clip.offset(0,-destination.dimensions().height/2);
-                //gfx::srect16 srcr = (gfx::srect16)m_spectro.bounds();
-
                 gfx::draw::bitmap(destination,(gfx::rect16)((gfx::srect16)m_spectro.bounds().offset(0,destination.dimensions().height/2)).crop(clip),m_spectro,clip2,gfx::bitmap_resize::crop,nullptr,nullptr);
             }
         }
