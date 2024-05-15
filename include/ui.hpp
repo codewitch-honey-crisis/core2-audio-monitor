@@ -17,12 +17,12 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     float m_fft[window_size];
     float m_bar_chart[window_size];
     float m_bar_chart_peaks[window_size];
-    bitmap_type m_spectro;
+    bitmap_type m_spectrogram;
     gfx::rgb_pixel<16> m_palette[256];
     int m_state = 0;
 
     analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
-        : base_type(parent, palette), m_spectro({0,0},nullptr) {
+        : base_type(parent, palette), m_spectrogram({0,0},nullptr) {
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
         }
@@ -57,8 +57,8 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         return *this;
     }
     virtual ~analyzer_box() {
-        if(m_spectro.begin()!=nullptr) {
-            free(m_spectro.begin());
+        if(m_spectrogram.begin()!=nullptr) {
+            free(m_spectrogram.begin());
         }
     }
     virtual void on_before_render() {
@@ -95,8 +95,8 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 gfx::convert(px24, &px16);
                 m_palette[i] = px16;
             }
-            m_spectro=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2),nullptr,ps_malloc);
-            m_spectro.fill(m_spectro.bounds(),pixel_type(0,true));
+            m_spectrogram=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2),nullptr,ps_malloc);
+            m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,true));
             m_state = 1;
         }
         memcpy(m_samples_buffer, m_samples, sizeof(m_samples_buffer));
@@ -116,13 +116,13 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             }
         } else if(m_state==2) { // spectroanalyzer
             static_assert(pixel_type::bit_depth==16,"this code needs to be ported for your display format");
-            const size_t stride = m_spectro.dimensions().width * 2;
-            uint8_t* p = m_spectro.begin();
+            const size_t stride = m_spectrogram.dimensions().width * 2;
+            uint8_t* p = m_spectrogram.begin();
             if(p!=nullptr) { // in case we didn't have memory
                 // scroll left and put the new values in
-                for(int y = 0; y<m_spectro.dimensions().height;++y) {
+                for(int y = 0; y<m_spectrogram.dimensions().height;++y) {
                     memmove(p,p+2,stride-2);
-                    *(uint16_t*)&p[stride-2]=m_palette[(size_t)m_fft[m_spectro.dimensions().height-y-1]].value();
+                    *(uint16_t*)&p[stride-2]=m_palette[(size_t)m_fft[m_spectrogram.dimensions().height-y-1]].value();
                     p+=stride;
                 }
             }
@@ -134,7 +134,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     virtual void on_release() override {
         ++m_state;
         if(m_state==2) {
-            m_spectro.fill(m_spectro.bounds(),pixel_type(0,true));
+            m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,true));
         }
         if(m_state>2) {
             m_state = 1;
@@ -169,7 +169,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             } else {
                 // spectrogram
                 gfx::rect16 clip2 = (gfx::rect16)clip.offset(0,-destination.dimensions().height/2);
-                gfx::draw::bitmap(destination,(gfx::rect16)((gfx::srect16)m_spectro.bounds().offset(0,destination.dimensions().height/2)).crop(clip),m_spectro,clip2,gfx::bitmap_resize::crop,nullptr,nullptr);
+                gfx::draw::bitmap(destination,(gfx::rect16)((gfx::srect16)m_spectrogram.bounds().offset(0,destination.dimensions().height/2)).crop(clip),m_spectrogram,clip2,gfx::bitmap_resize::crop,nullptr,nullptr);
             }
         }
         const float x_step = (float)destination.dimensions().width / (float)window_size;
