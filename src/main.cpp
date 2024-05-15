@@ -61,7 +61,7 @@ static void lcd_on_flush(const gfx::rect16 &bounds, const void *bmp, void *state
 // for the touch panel
 static void lcd_on_touch(gfx::point16 *out_locations, size_t *in_out_locations_size, void *state) {
     static uint32_t touch_ts = 0;
-    if (millis() > touch_ts + 13) {
+    if (millis() > touch_ts + 50) {
         touch_ts = millis();
         touch.update();
     }
