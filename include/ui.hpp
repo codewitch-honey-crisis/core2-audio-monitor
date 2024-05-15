@@ -148,20 +148,20 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             if(m_state==1) {
                 // eq bars
                 int x = 0;
-                int xi_step = int(320.0f / (window_size / 16));
+                int xi_step = int(float(destination.dimensions().width) / (window_size / 16));
                 for (int i = 2; i < window_size / 4; i += 4) {
                     float ave = 0;
                     for (int j = 0; j < 4; j++) {
                         ave += m_bar_chart[i + j];
                     }
                     ave /= 4;
-                    int bar_value = std::min(120.0f, 0.25f * ave);
+                    int bar_value = std::min(float(destination.dimensions().height/2), 0.25f * ave);
                     ave = 0;
                     for (int j = 0; j < 4; j++) {
                         ave += m_bar_chart_peaks[i + j];
                     }
                     ave /= 4;
-                    int peak_value = std::min(120.0f, 0.25f * ave);
+                    int peak_value = std::min(float(destination.dimensions().height/2), 0.25f * ave);
                     gfx::draw::line_aa(destination,gfx::srect16(x, destination.dimensions().height - peak_value, x+ xi_step - 1, destination.dimensions().height - peak_value), m_palette[std::max(0,std::min(255,peak_value+135))]); 
                     gfx::draw::filled_rectangle(destination,gfx::srect16(gfx::spoint16(x, destination.dimensions().height - bar_value),gfx::ssize16( xi_step - 1, bar_value)),m_palette[std::max(0,std::min(255,bar_value+135))]);
                     x += xi_step;
