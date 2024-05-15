@@ -20,6 +20,7 @@ template<size_t WindowSize = 512> class processor {
  public:
   static constexpr const size_t fft_size = compute_fft_size();
   static constexpr const size_t window_size = WindowSize;
+  static constexpr const float window_mult = float(1)/float(WindowSize);
   float m_fft[window_size / 4];
   float m_samples[fft_size];
   const float *fft() const
@@ -43,12 +44,12 @@ template<size_t WindowSize = 512> class processor {
   void update(const int16_t *samples)
   {
     int offset = (fft_size - window_size) / 2;
-    double input_avg = 0.0;
+    float input_avg = 0.0f;
 
     for (int i = 0; i < window_size; i++) {
-      const float input_sample = samples[i] / 30.0f;
+      const float input_sample = samples[i] * (1.0f/30.0f);
       m_samples[offset + i] = input_sample;
-      input_avg += double(input_sample) / double(window_size);
+      input_avg += float(input_sample) * window_mult;
     }
 
     // Remove any DC offset. Various M5Stack Core2 devices have shown different DC
