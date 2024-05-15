@@ -162,7 +162,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                     }
                     ave /= 4;
                     int peak_value = std::min(120.0f, 0.25f * ave);
-                    gfx::draw::line(destination,gfx::srect16(x, 240 - peak_value, x+ xi_step - 1, 240 - peak_value), m_palette[std::max(0,std::min(255,peak_value+135))]); 
+                    gfx::draw::line_aa(destination,gfx::srect16(x, 240 - peak_value, x+ xi_step - 1, 240 - peak_value), m_palette[std::max(0,std::min(255,peak_value+135))]); 
                     gfx::draw::filled_rectangle(destination,gfx::srect16(gfx::spoint16(x, 240 - bar_value),gfx::ssize16( xi_step - 1, bar_value)),m_palette[std::max(0,std::min(255,bar_value+135))]);
                     x += xi_step;
                 }
