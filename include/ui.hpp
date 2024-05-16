@@ -146,7 +146,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     virtual void on_release() override {
         ++m_state;
         if(m_state==2) {
-            m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,0,6));
+            m_spectrogram.fill(m_spectrogram.bounds(),lcd_active_screen()->background_color());
         }
         if(m_state>2) {
             m_state = 1;

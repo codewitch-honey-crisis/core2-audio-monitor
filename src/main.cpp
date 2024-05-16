@@ -160,7 +160,7 @@ extern "C" void app_main() {
     power.lcd_voltage(3);
     lcd_panel_init();
     touch.initialize();
-    main_screen.background_color(screen_t::pixel_type(0,0,6));
+    main_screen.background_color(gfx::color<typename screen_t::pixel_type>::black);
     main_screen.on_touch_callback(lcd_on_touch);
     main_analyzer.bounds(main_screen.bounds());
     main_screen.register_control(main_analyzer);
