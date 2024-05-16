@@ -40,10 +40,6 @@ kiss_fastfir_cfg kiss_fastfir_alloc(const kffsamp_t * imp_resp,size_t n_imp_resp
 size_t kiss_fastfir( kiss_fastfir_cfg cfg, kffsamp_t * inbuf, kffsamp_t * outbuf, size_t n, size_t *offset);
 
 
-
-static int verbose=0;
-
-
 struct kiss_fastfir_state{
     size_t nfft;
     size_t ngood;

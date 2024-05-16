@@ -4,6 +4,17 @@
 using screen_t = uix::screen<gfx::rgb_pixel<16>>;
 using surface_t = screen_t::control_surface_type;
 
+// define these in a CPP somewhere:
+// using lcd_panel.cpp
+#ifndef USE_SINGLE_BUFFER
+// use two 32KB buffers (DMA)
+extern uint8_t lcd_transfer_buffer1[];
+extern uint8_t lcd_transfer_buffer2[];
+#else
+extern uint8_t lcd_transfer_buffer1[];
+extern uint8_t* const lcd_transfer_buffer2;
+#endif
+
 extern screen_t main_screen;
 
 template<typename ControlSurfaceType, size_t WindowSize = 512>
