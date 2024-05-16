@@ -38,13 +38,13 @@ template<size_t WindowSize> class i2s_sampler {
     static IRAM_ATTR bool i2s_rx_queue_callback(i2s_chan_handle_t handle, i2s_event_data_t *event, void *user_ctx)
     {
         i2s_sampler* sampler = (i2s_sampler*)user_ctx;
-        if(*(uint8_t *)(event->data) != 0) {
+        //if(*(uint8_t *)(event->data) != 0) {
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
             xSemaphoreGiveFromISR(sampler->m_i2sSemaphore,&xHigherPriorityTaskWoken);
                 /* Yield if xHigherPriorityTaskWoken is true.  The 
                 actual macro used here is port specific. */
                 portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-        }
+        //}
         /*
         static int count = 0;
         if(count++==10) {
@@ -85,6 +85,7 @@ template<size_t WindowSize> class i2s_sampler {
         while (true) {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
             xSemaphoreTake(sampler->m_i2sSemaphore,portMAX_DELAY);
+            printf("I2S read\n");
             size_t bytesRead = 0;
             do {
                 // read data from the I2S peripheral

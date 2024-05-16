@@ -46,7 +46,7 @@ i2s_pdm_rx_config_t pdm_rx_cfg = {
     .slot_mask = I2S_PDM_SLOT_RIGHT,
     },
     .gpio_cfg = {
-        .clk = GPIO_NUM_12,
+        .clk = GPIO_NUM_0,
         .din = GPIO_NUM_34,
         .invert_flags = {
             .clk_inv = false,

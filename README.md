@@ -4,8 +4,6 @@ An adaptation and simplification using UIX and the ESP LCD Panel API
 
 by honey the codewitch
 
-Disclaimer: There's an ESP-IDF configuration in here. The support isn't complete yet. I can't seem to get I2S to work. Any help would be appreciated.
-
 Adapted from
 # M5Stack Core 2 Audio
 
