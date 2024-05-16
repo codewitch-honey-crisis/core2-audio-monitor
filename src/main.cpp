@@ -1,4 +1,4 @@
-#define USE_SINGLE_BUFFER
+//#define USE_SINGLE_BUFFER
 #if __has_include(<Arduino.h>)
 #include <Arduino.h>
 #define I2C_INTERNAL Wire1
