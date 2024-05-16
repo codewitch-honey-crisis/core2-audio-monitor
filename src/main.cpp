@@ -2,8 +2,7 @@
 #include <Arduino.h>
 #define I2C_INTERNAL Wire1
 #else
-#define USE_SINGLE_BUFFER
-
+//#define USE_SINGLE_BUFFER
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #define I2C_INTERNAL I2C_NUM_1
