@@ -1,3 +1,4 @@
+#define NO_DMA
 #if __has_include(<Arduino.h>)
 #include <Arduino.h>
 #define I2C_INTERNAL Wire1
@@ -76,10 +77,14 @@ static i2s_pin_config_t i2s_pins = {
 };
 #endif
 static esp_lcd_panel_handle_t lcd_handle;
+#ifndef NO_DMA
 // use two 32KB buffers (DMA)
 static uint8_t lcd_transfer_buffer1[32 * 1024];
 static uint8_t lcd_transfer_buffer2[32 * 1024];
-
+#else
+static uint8_t lcd_transfer_buffer1[64 * 1024];
+static uint8_t* const lcd_transfer_buffer2 = nullptr;
+#endif
 static i2s_sampler<WINDOW_SIZE> main_sampler;
 static processor<WINDOW_SIZE> main_processor;
 static TaskHandle_t processing_task_handle;
@@ -91,6 +96,7 @@ screen_t main_screen({320, 240},
                      lcd_transfer_buffer1,
                      lcd_transfer_buffer2);
 analyzer_box_t main_analyzer(main_screen);
+
 // tell UIX the DMA transfer is complete
 static bool lcd_flush_ready(esp_lcd_panel_io_handle_t panel_io,
                             esp_lcd_panel_io_event_data_t *edata,
@@ -98,6 +104,7 @@ static bool lcd_flush_ready(esp_lcd_panel_io_handle_t panel_io,
     main_screen.flush_complete();
     return true;
 }
+
 // tell the lcd panel api to transfer data via DMA
 static void lcd_on_flush(const gfx::rect16 &bounds, const void *bmp, void *state) {
     int x1 = bounds.x1, y1 = bounds.y1, x2 = bounds.x2 + 1, y2 = bounds.y2 + 1;
