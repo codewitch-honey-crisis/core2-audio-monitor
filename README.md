@@ -11,6 +11,7 @@ An adaptation and simplification using UIX and the ESP LCD Panel API
 - No more requiring PSRAM
 - Far fewer dynamic allocations
 - Main logic is isolated to ui.hpp and main.cpp
+- More modern C++ using GP more than OOP
 
 by honey the codewitch
 
