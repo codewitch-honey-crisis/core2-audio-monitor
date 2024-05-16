@@ -4,6 +4,8 @@ An adaptation and simplification using UIX and the ESP LCD Panel API
 
 by honey the codewitch
 
+Note: The ESP-IDF orchestration does not perform the spectrogram due to me being unable to configure PSRAM properly for this device under the Core 2. It's a mystery, and once I solve it I'll update the code.
+
 Adapted from
 # M5Stack Core 2 Audio
 
