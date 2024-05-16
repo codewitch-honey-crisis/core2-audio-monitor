@@ -1,8 +1,8 @@
+//#define USE_SINGLE_BUFFER
 #if __has_include(<Arduino.h>)
 #include <Arduino.h>
 #define I2C_INTERNAL Wire1
 #else
-//#define USE_SINGLE_BUFFER
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #define I2C_INTERNAL I2C_NUM_1
