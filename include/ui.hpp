@@ -22,7 +22,10 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     gfx::rgb_pixel<16> m_palette[256];
     int m_state = 0;
     static void* psram_alloc(size_t size) {
-        return heap_caps_malloc(size,MALLOC_CAP_SPIRAM);
+        void* result =  heap_caps_malloc(size,MALLOC_CAP_SPIRAM);
+        if(result==nullptr) {
+            puts("PSRAM Heap alloc failed");
+        }
     }
    public:
     analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)

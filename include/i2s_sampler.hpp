@@ -85,7 +85,6 @@ template<size_t WindowSize> class i2s_sampler {
         while (true) {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
             xSemaphoreTake(sampler->m_i2sSemaphore,portMAX_DELAY);
-            printf("I2S read\n");
             size_t bytesRead = 0;
             do {
                 // read data from the I2S peripheral
