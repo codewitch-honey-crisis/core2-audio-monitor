@@ -1,4 +1,4 @@
-#define NO_DMA
+//#define USE_SINGLE_BUFFER
 #if __has_include(<Arduino.h>)
 #include <Arduino.h>
 #define I2C_INTERNAL Wire1
@@ -77,7 +77,7 @@ static i2s_pin_config_t i2s_pins = {
 };
 #endif
 static esp_lcd_panel_handle_t lcd_handle;
-#ifndef NO_DMA
+#ifndef USE_SINGLE_BUFFER
 // use two 32KB buffers (DMA)
 static uint8_t lcd_transfer_buffer1[32 * 1024];
 static uint8_t lcd_transfer_buffer2[32 * 1024];
