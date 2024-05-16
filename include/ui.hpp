@@ -1,7 +1,5 @@
 #pragma once
-#include <gfx.hpp>
-#include <uix.hpp>
-using screen_t = uix::screen<gfx::rgb_pixel<16>>;
+#include "lcd_panel.hpp"
 using surface_t = screen_t::control_surface_type;
 
 // define these in a CPP somewhere:

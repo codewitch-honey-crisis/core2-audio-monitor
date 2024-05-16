@@ -165,6 +165,7 @@ extern "C" void app_main() {
     main_screen.on_touch_callback(lcd_on_touch);
     main_analyzer.bounds(main_screen.bounds());
     main_screen.register_control(main_analyzer);
+    lcd_active_screen(&main_screen);
     // create a processing task to update the sample stream/fft
     xTaskCreatePinnedToCore(
         processing_task, "Processing Task", 1024, nullptr, 2, &processing_task_handle, 0);

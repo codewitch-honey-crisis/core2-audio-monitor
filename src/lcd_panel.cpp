@@ -1,14 +1,17 @@
 #include <lcd_panel.hpp>
-#include <ui.hpp>
+#include <gfx.hpp>
+#include <uix.hpp>
 #include <driver/gpio.h>
 #include <driver/spi_master.h>
 #include <esp_lcd_panel_ili9342.h>
 #include <esp_lcd_panel_io.h>
 #include <esp_lcd_panel_ops.h>
 #include <esp_lcd_panel_vendor.h>
+using namespace gfx;
+using namespace uix;
 
 static esp_lcd_panel_handle_t lcd_handle;
-
+static screen_t* lcd_screen_handle;
 #ifndef USE_SINGLE_BUFFER
 // use two 32KB buffers (DMA)
 uint8_t lcd_transfer_buffer1[32 * 1024];
@@ -18,12 +21,28 @@ uint8_t lcd_transfer_buffer1[64 * 1024];
 uint8_t* const lcd_transfer_buffer2 = nullptr;
 #endif
 
+screen_t *lcd_active_screen() {
+    return lcd_screen_handle;
+}
+void lcd_active_screen(screen_t* value) {
+    if(lcd_screen_handle!=nullptr) {
+        while(lcd_screen_handle->flushing()) {
+            vTaskDelay(5);
+        }
+    }
+    if(value!=nullptr) {
+        value->invalidate();
+    }
+    lcd_screen_handle = value;
+}
 
 // tell UIX the DMA transfer is complete
 static bool lcd_flush_ready(esp_lcd_panel_io_handle_t panel_io,
                             esp_lcd_panel_io_event_data_t *edata,
                             void *user_ctx) {
-    main_screen.flush_complete();
+    if(lcd_screen_handle!=nullptr) {
+        lcd_screen_handle->flush_complete();
+    }
     return true;
 }
 
