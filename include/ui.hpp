@@ -26,6 +26,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         if(result==nullptr) {
             puts("PSRAM Heap alloc failed");
         }
+        return result;
     }
    public:
     analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
