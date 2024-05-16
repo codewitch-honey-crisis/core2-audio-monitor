@@ -24,13 +24,6 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     bitmap_type m_spectrogram;
     gfx::rgb_pixel<16> m_palette[256];
     int m_state = 0;
-    static void* psram_alloc(size_t size) {
-        void* result =  heap_caps_malloc(size,MALLOC_CAP_SPIRAM);
-        if(result==nullptr) {
-            puts("PSRAM Heap alloc failed");
-        }
-        return result;
-    }
    public:
     analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
         : base_type(parent, palette), m_spectrogram({0,0},nullptr) {
@@ -106,8 +99,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 gfx::convert(px24, &px16);
                 m_palette[i] = px16;
             }
-            m_spectrogram=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2),nullptr,psram_alloc);
-            //m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,0,6));
+            m_spectrogram=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2));
             m_state = 1;
         }
         memcpy(m_samples_buffer, m_samples, sizeof(m_samples_buffer));
