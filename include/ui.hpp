@@ -160,17 +160,17 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 int x = 0;
                 int xi_step = int(float(destination.dimensions().width) / (window_size / 16));
                 for (int i = 2; i < window_size / 4; i += 4) {
-                    float ave = 0;
+                    float ave = 0.0f;
                     for (int j = 0; j < 4; j++) {
                         ave += m_bar_chart[i + j];
                     }
-                    ave /= 4;
+                    ave *= .25f;
                     int bar_value = std::min(float(destination.dimensions().height/2), 0.25f * ave);
                     ave = 0;
                     for (int j = 0; j < 4; j++) {
                         ave += m_bar_chart_peaks[i + j];
                     }
-                    ave /= 4;
+                    ave *= .25f;
                     int peak_value = std::min(float(destination.dimensions().height/2), 0.25f * ave);
                     gfx::draw::line_aa(destination,gfx::srect16(x, destination.dimensions().height - peak_value, x+ xi_step - 1, destination.dimensions().height - peak_value), m_palette[std::max(0,std::min(255,peak_value+135))]); 
                     gfx::draw::filled_rectangle(destination,gfx::srect16(gfx::spoint16(x, destination.dimensions().height - bar_value),gfx::ssize16( xi_step - 1, bar_value)),m_palette[std::max(0,std::min(255,bar_value+135))]);
@@ -178,12 +178,11 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 }
             } else {
                 // spectrogram
-                //destination.fill(gfx::rect16(0,destination.dimensions().height/2,destination.bounds().x2,destination.bounds().y2),pixel_type(0,0,6));
                 gfx::rect16 clip2 = (gfx::rect16)clip.offset(0,-destination.dimensions().height/2);
                 gfx::draw::bitmap(destination,(gfx::rect16)((gfx::srect16)m_spectrogram.bounds().offset(0,destination.dimensions().height/2)).crop(clip),m_spectrogram,clip2,gfx::bitmap_resize::crop,nullptr,nullptr);
             }
         }
-        const float x_step = (float)destination.dimensions().width / (float)window_size;
+        const float x_step = 4 * ((float)destination.dimensions().width / (float)window_size);
         const float y_offset = 60.0f;
 
         float sample_x = 0.0f;
@@ -191,10 +190,10 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             gfx::draw::line(destination,
                             gfx::rect16(sample_x,
                                         y_offset + m_samples_buffer[i - 4] * 3,
-                                        sample_x + x_step * 4,
+                                        sample_x + x_step,
                                         y_offset + m_samples_buffer[i] * 3),
                             gfx::rgb_pixel<16>(0xfff,true));
-            sample_x += x_step * 4;
+            sample_x += x_step;
         }
     }
 };
