@@ -3,6 +3,9 @@
 #include <uix.hpp>
 using screen_t = uix::screen<gfx::rgb_pixel<16>>;
 using surface_t = screen_t::control_surface_type;
+
+extern screen_t main_screen;
+
 template<typename ControlSurfaceType, size_t WindowSize = 512>
 class analyzer_box : public uix::control<ControlSurfaceType> {
    public:
@@ -104,7 +107,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 m_palette[i] = px16;
             }
             m_spectrogram=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2),nullptr,psram_alloc);
-            m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,true));
+            //m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,0,6));
             m_state = 1;
         }
         memcpy(m_samples_buffer, m_samples, sizeof(m_samples_buffer));
@@ -142,7 +145,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     virtual void on_release() override {
         ++m_state;
         if(m_state==2) {
-            m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,true));
+            m_spectrogram.fill(m_spectrogram.bounds(),pixel_type(0,0,6));
         }
         if(m_state>2) {
             m_state = 1;
@@ -175,6 +178,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 }
             } else {
                 // spectrogram
+                //destination.fill(gfx::rect16(0,destination.dimensions().height/2,destination.bounds().x2,destination.bounds().y2),pixel_type(0,0,6));
                 gfx::rect16 clip2 = (gfx::rect16)clip.offset(0,-destination.dimensions().height/2);
                 gfx::draw::bitmap(destination,(gfx::rect16)((gfx::srect16)m_spectrogram.bounds().offset(0,destination.dimensions().height/2)).crop(clip),m_spectrogram,clip2,gfx::bitmap_resize::crop,nullptr,nullptr);
             }
@@ -196,5 +200,4 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
 };
 using analyzer_box_t = analyzer_box<surface_t>;
 
-extern screen_t main_screen;
 extern analyzer_box_t main_analyzer;

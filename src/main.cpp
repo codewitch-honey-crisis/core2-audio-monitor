@@ -231,6 +231,7 @@ static void drawing_task(void *param) {
 }
 #ifdef ARDUINO
 void setup() {
+    setCpuFrequencyMhz(240);
     Serial.begin(115200);
 #else
 extern "C" void app_main() {
@@ -239,7 +240,7 @@ extern "C" void app_main() {
     power.lcd_voltage(3);
     lcd_panel_init();
     touch.initialize();
-    //main_screen.background_color(gfx::color<typename screen_t::pixel_type>::purple);
+    main_screen.background_color(screen_t::pixel_type(0,0,6));
     main_screen.on_flush_callback(lcd_on_flush);
     main_screen.on_touch_callback(lcd_on_touch);
     main_analyzer.bounds(main_screen.bounds());
