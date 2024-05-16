@@ -178,7 +178,6 @@ static void lcd_panel_init() {
 
     // Initialize LCD panel
     esp_lcd_panel_init(lcd_handle);
-    // esp_lcd_panel_io_tx_param(io_handle, LCD_CMD_SLPOUT, NULL, 0);
     //  Swap x and y axis (Different LCD screens may need different options)
     esp_lcd_panel_swap_xy(lcd_handle, false);
     esp_lcd_panel_set_gap(lcd_handle, 0, 0);
@@ -214,7 +213,6 @@ static void drawing_task(void *param) {
     uint32_t fps_ts = millis();
     unsigned long ms = 0;
     while (true) {
-
         // wait to be told to redraw
         uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
         if (ulNotificationValue != 0) {
@@ -254,13 +252,14 @@ extern "C" void app_main() {
     main_screen.register_control(main_analyzer);
     // create a processing task to update the sample stream/fft
     xTaskCreatePinnedToCore(
-        processing_task, "Processing Task", 4096, nullptr, 2, &processing_task_handle, 0);
+        processing_task, "Processing Task", 1024, nullptr, 2, &processing_task_handle, 0);
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0) 
     main_sampler.initialize(I2S_NUM_0, chan_cfg, pdm_rx_cfg, processing_task_handle);
 #else
     main_sampler.initialize(I2S_NUM_0, i2s_pins, i2s_config, processing_task_handle);
 #endif
     // create a drawing task to update our UI
+    // need 4096 words for printf
     xTaskCreatePinnedToCore(
         drawing_task, "Drawing Task", 4096, nullptr, 1, &drawing_task_handle, 1);
 #ifndef ARDUINO
