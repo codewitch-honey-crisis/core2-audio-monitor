@@ -2,9 +2,17 @@
 
 An adaptation and simplification using UIX and the ESP LCD Panel API
 
-by honey the codewitch
+- Less flicker than the original
+- Supports the ESP-IDF and Arduino
+- Doesn't use deprecated APIs
+- No dependency to FastLED or the M5 stack libraries
+- Uses the htcw_* ecosystem, including UIX and GFX for rendering.
+- No more labyrinth of classes
+- No more requiring PSRAM
+- Far fewer dynamic allocations
+- Main logic is isolated to ui.hpp and main.cpp
 
-Note: The ESP-IDF orchestration does not perform the spectrogram due to me being unable to configure PSRAM properly for this device under the Core 2. It's a mystery, and once I solve it I'll update the code.
+by honey the codewitch
 
 Adapted from
 # M5Stack Core 2 Audio
