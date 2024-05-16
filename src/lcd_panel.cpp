@@ -11,7 +11,7 @@ using namespace gfx;
 using namespace uix;
 
 static esp_lcd_panel_handle_t lcd_handle;
-static screen_t* lcd_screen_handle;
+static screen_t* lcd_screen_handle=nullptr;
 #ifndef USE_SINGLE_BUFFER
 // use two 32KB buffers (DMA)
 uint8_t lcd_transfer_buffer1[32 * 1024];
@@ -29,9 +29,12 @@ void lcd_active_screen(screen_t* value) {
         while(lcd_screen_handle->flushing()) {
             vTaskDelay(5);
         }
+        lcd_screen_handle->on_flush_callback(nullptr);
+        
     }
     if(value!=nullptr) {
-        value->invalidate();
+        value->invalidate();        
+        value->on_flush_callback(lcd_on_flush);
     }
     lcd_screen_handle = value;
 }

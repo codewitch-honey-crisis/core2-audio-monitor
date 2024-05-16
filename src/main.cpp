@@ -161,7 +161,6 @@ extern "C" void app_main() {
     lcd_panel_init();
     touch.initialize();
     main_screen.background_color(screen_t::pixel_type(0,0,6));
-    main_screen.on_flush_callback(lcd_on_flush);
     main_screen.on_touch_callback(lcd_on_touch);
     main_analyzer.bounds(main_screen.bounds());
     main_screen.register_control(main_analyzer);
