@@ -85,7 +85,7 @@ analyzer_box_t main_analyzer(main_screen);
 // for the touch panel
 static void lcd_on_touch(gfx::point16 *out_locations, size_t *in_out_locations_size, void *state) {
     static uint32_t touch_ts = 0;
-    if (millis() > touch_ts + 50) {
+    if (millis() > touch_ts + 13) {
         touch_ts = millis();
         touch.update();
     }
