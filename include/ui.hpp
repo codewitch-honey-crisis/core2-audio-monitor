@@ -83,35 +83,19 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     virtual void on_before_render() {
         if (m_state == 0) {
             // init palette the first time
-            gfx::rgb_pixel<24> px1(0, 0, 50), px2(0, 255, 0), px3(255, 220, 0), px4(255, 128, 0),
-                px5(255, 0, 0);
+            gfx::rgb_pixel<16> px1(0, 0, 3), px2(0, 31, 0), px3(15, 27, 0), px4(15, 15, 0),
+                px5(15, 0, 0);
             for (int i = 0; i < 128; ++i) {
-                gfx::rgb_pixel<24> px24;
-                px1.blend(px2, 1.0f - ((float)i / 128.0f), &px24);
-                gfx::rgb_pixel<16> px16;
-                gfx::convert(px24, &px16);
-                m_palette[i] = px16;
+                m_palette[i] = px1.blend(px2, 1.0f - ((float)i / 128.0f));
             }
             for (int i = 128; i < 164; ++i) {
-                gfx::rgb_pixel<24> px24;
-                px2.blend(px3, 1.0f - ((float)(i-128) / 36.0f), &px24);
-                gfx::rgb_pixel<16> px16;
-                gfx::convert(px24, &px16);
-                m_palette[i] = px16;
+                m_palette[i] = px2.blend(px3, 1.0f - ((float)(i-128) / 36.0f));
             }
             for (int i = 164; i < 192; ++i) {
-                gfx::rgb_pixel<24> px24;
-                px3.blend(px4, 1.0f - ((float)(i-164) / 28.0f), &px24);
-                gfx::rgb_pixel<16> px16;
-                gfx::convert(px24, &px16);
-                m_palette[i] = px16;
+                m_palette[i] = px3.blend(px4, 1.0f - ((float)(i-164) / 28.0f));
             }
             for (int i = 192; i < 256; ++i) {
-                gfx::rgb_pixel<24> px24;
-                px4.blend(px5, 1.0f - ((float)(i-192) / 63.0f), &px24);
-                gfx::rgb_pixel<16> px16;
-                gfx::convert(px24, &px16);
-                m_palette[i] = px16;
+                m_palette[i] = px4.blend(px5, 1.0f - ((float)(i-192) / 63.0f));
             }
             m_spectrogram=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2));
             m_state = 1;
