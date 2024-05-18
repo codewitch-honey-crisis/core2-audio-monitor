@@ -182,5 +182,6 @@ extern "C" void app_main() {
 }
 
 void loop() {
-    // do nothing
+    // getting rid of this clears up CPU
+    vTaskDelete(NULL);
 }
