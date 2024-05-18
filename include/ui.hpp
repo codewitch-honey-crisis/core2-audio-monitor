@@ -79,7 +79,6 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             // init palette the first time
             gfx::rgb_pixel<24> px1(0, 0, 50), px2(0, 255, 0), px3(255, 220, 0), px4(255, 128, 0),
                 px5(255, 0, 0);
-            // init palette
             for (int i = 0; i < 128; ++i) {
                 gfx::rgb_pixel<24> px24;
                 px1.blend(px2, 1.0f - ((float)i / 128.0f), &px24);
