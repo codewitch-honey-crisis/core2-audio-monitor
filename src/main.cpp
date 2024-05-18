@@ -1,21 +1,21 @@
 #if __has_include(<Arduino.h>)
-#include <Arduino.h>
-#define I2C_INTERNAL Wire1
+#    include <Arduino.h>
+#    define I2C_INTERNAL Wire1
 #else
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#define I2C_INTERNAL I2C_NUM_1
+#    include <freertos/FreeRTOS.h>
+#    include <freertos/task.h>
+#    define I2C_INTERNAL I2C_NUM_1
 #endif
 #include "i2s_sampler.hpp"
+#include "lcd_panel.hpp"
 #include "processor.hpp"
 #include "ui.hpp"
-#include "lcd_panel.hpp"
 #include <ft6336.hpp>
 #include <m5core2_power.hpp>
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-#include <driver/i2s_pdm.h>
+#    include <driver/i2s_pdm.h>
 #else
-#include <driver/i2s.h>
+#    include <driver/i2s.h>
 #endif
 #ifdef ARDUINO
 using namespace arduino;
@@ -33,20 +33,24 @@ static m5core2_power power;
 i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
 i2s_pdm_rx_config_t pdm_rx_cfg = {
     .clk_cfg = I2S_PDM_RX_CLK_DEFAULT_CONFIG(64000),
-    /* The default mono slot is the left slot (whose 'select pin' of the PDM microphone is pulled down) */
-    .slot_cfg = { 
-    .data_bit_width = I2S_DATA_BIT_WIDTH_16BIT,
-    .slot_bit_width = I2S_SLOT_BIT_WIDTH_AUTO,
-    .slot_mode = I2S_SLOT_MODE_MONO,
-    .slot_mask = I2S_PDM_SLOT_RIGHT,
-    },
-    .gpio_cfg = {
-        .clk = GPIO_NUM_0,
-        .din = GPIO_NUM_34,
-        .invert_flags = {
-            .clk_inv = false,
+    /* The default mono slot is the left slot (whose 'select pin' of the PDM microphone is pulled
+       down) */
+    .slot_cfg =
+        {
+            .data_bit_width = I2S_DATA_BIT_WIDTH_16BIT,
+            .slot_bit_width = I2S_SLOT_BIT_WIDTH_AUTO,
+            .slot_mode = I2S_SLOT_MODE_MONO,
+            .slot_mask = I2S_PDM_SLOT_RIGHT,
         },
-    },
+    .gpio_cfg =
+        {
+            .clk = GPIO_NUM_0,
+            .din = GPIO_NUM_34,
+            .invert_flags =
+                {
+                    .clk_inv = false,
+                },
+        },
 };
 #else
 // i2s config for reading from both m5stack mic
@@ -62,13 +66,11 @@ static i2s_config_t i2s_config = {
 };
 
 // i2s pins
-static i2s_pin_config_t i2s_pins = {
-                            .mck_io_num = I2S_PIN_NO_CHANGE,
-                            .bck_io_num = GPIO_NUM_12,
-                            .ws_io_num = GPIO_NUM_0,
-                            .data_out_num = I2S_PIN_NO_CHANGE,
-                            .data_in_num = GPIO_NUM_34
-};
+static i2s_pin_config_t i2s_pins = {.mck_io_num = I2S_PIN_NO_CHANGE,
+                                    .bck_io_num = GPIO_NUM_12,
+                                    .ws_io_num = GPIO_NUM_0,
+                                    .data_out_num = I2S_PIN_NO_CHANGE,
+                                    .data_in_num = GPIO_NUM_34};
 #endif
 static i2s_sampler<WINDOW_SIZE> main_sampler;
 static processor<WINDOW_SIZE> main_processor;
@@ -76,10 +78,7 @@ static TaskHandle_t processing_task_handle;
 static TaskHandle_t drawing_task_handle;
 
 // the screen/control definitions
-screen_t main_screen({320, 240},
-                     32*1024,
-                     lcd_transfer_buffer1,
-                     lcd_transfer_buffer2);
+screen_t main_screen({320, 240}, 32 * 1024, lcd_transfer_buffer1, lcd_transfer_buffer2);
 analyzer_box_t main_analyzer(main_screen);
 
 // for the touch panel
@@ -135,9 +134,9 @@ static void drawing_task(void *param) {
             main_analyzer.invalidate();
             main_screen.update();
             uint32_t end_ts = millis();
-            ms+=(end_ts-start_ts);
+            ms += (end_ts - start_ts);
             ++frames;
-            if(millis()>=fps_ts+1000) {
+            if (millis() >= fps_ts + 1000) {
                 fps_ts = millis();
                 printf("FPS: %d / Avg: %lums\n",frames,frames>0?ms/frames:-1);
                 frames = 0;
@@ -147,7 +146,6 @@ static void drawing_task(void *param) {
             xTaskNotify(drawing_task_handle, 0, eSetValueWithOverwrite);
         }
     }
-    
 }
 #ifdef ARDUINO
 void setup() {
@@ -168,7 +166,7 @@ extern "C" void app_main() {
     // create a processing task to update the sample stream/fft
     xTaskCreatePinnedToCore(
         processing_task, "Processing Task", 1024, nullptr, 2, &processing_task_handle, 0);
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0) 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     main_sampler.initialize(I2S_NUM_0, chan_cfg, pdm_rx_cfg, processing_task_handle);
 #else
     main_sampler.initialize(I2S_NUM_0, i2s_pins, i2s_config, processing_task_handle);
@@ -178,9 +176,9 @@ extern "C" void app_main() {
     xTaskCreatePinnedToCore(
         drawing_task, "Drawing Task", 4096, nullptr, 1, &drawing_task_handle, 1);
 #ifndef ARDUINO
-    int count=0;
-    while(1) {
-        if(count++==10) {
+    int count = 0;
+    while (1) {
+        if (count++ == 10) {
             vTaskDelay(5);
             count = 0;
         }

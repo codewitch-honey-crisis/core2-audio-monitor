@@ -1,5 +1,6 @@
 #pragma once
 #include "lcd_panel.hpp"
+#include "palette.hpp"
 using surface_t = screen_t::control_surface_type;
 
 // define these in a CPP somewhere:
@@ -31,7 +32,6 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     float m_bar_chart[window_size];
     float m_bar_chart_peaks[window_size];
     bitmap_type m_spectrogram;
-    gfx::rgb_pixel<16> m_palette[256];
     int m_state = 0;
    public:
     analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
@@ -82,21 +82,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     }
     virtual void on_before_render() {
         if (m_state == 0) {
-            // init palette the first time
-            gfx::rgb_pixel<16> px1(0, 0, 3), px2(0, 31, 0), px3(15, 27, 0), px4(15, 15, 0),
-                px5(15, 0, 0);
-            for (int i = 0; i < 128; ++i) {
-                m_palette[i] = px1.blend(px2, 1.0f - ((float)i / 128.0f));
-            }
-            for (int i = 128; i < 164; ++i) {
-                m_palette[i] = px2.blend(px3, 1.0f - ((float)(i-128) / 36.0f));
-            }
-            for (int i = 164; i < 192; ++i) {
-                m_palette[i] = px3.blend(px4, 1.0f - ((float)(i-164) / 28.0f));
-            }
-            for (int i = 192; i < 256; ++i) {
-                m_palette[i] = px4.blend(px5, 1.0f - ((float)(i-192) / 63.0f));
-            }
+            // create the spectrogram bitmap 
             m_spectrogram=gfx::create_bitmap<pixel_type,palette_type>(gfx::size16(this->dimensions().width,this->dimensions().height/2));
             m_state = 1;
         }
@@ -123,7 +109,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                 // scroll left and put the new values in
                 for(int y = 0; y<m_spectrogram.dimensions().height;++y) {
                     memmove(p,p+2,stride-2);
-                    *(uint16_t*)&p[stride-2]=m_palette[std::max(0, std::min(255, (int)m_fft[m_spectrogram.dimensions().height-y-1]))].value();
+                    *(uint16_t*)&p[stride-2]=analyzer_palette[std::max(0, std::min(255, (int)m_fft[m_spectrogram.dimensions().height-y-1]))].value();
                     p+=stride;
                 }
             }
@@ -162,8 +148,8 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                     }
                     ave *= .25f;
                     int peak_value = std::min(float(destination.dimensions().height/2), 0.25f * ave);
-                    gfx::draw::line_aa(destination,gfx::srect16(x, destination.dimensions().height - peak_value, x+ xi_step - 1, destination.dimensions().height - peak_value), m_palette[std::max(0,std::min(255,peak_value+135))]); 
-                    gfx::draw::filled_rectangle(destination,gfx::srect16(gfx::spoint16(x, destination.dimensions().height - bar_value),gfx::ssize16( xi_step - 1, bar_value)),m_palette[std::max(0,std::min(255,bar_value+135))]);
+                    gfx::draw::line_aa(destination,gfx::srect16(x, destination.dimensions().height - peak_value, x+ xi_step - 1, destination.dimensions().height - peak_value), analyzer_palette[std::max(0,std::min(255,peak_value+135))]); 
+                    gfx::draw::filled_rectangle(destination,gfx::srect16(gfx::spoint16(x, destination.dimensions().height - bar_value),gfx::ssize16( xi_step - 1, bar_value)),analyzer_palette[std::max(0,std::min(255,bar_value+135))]);
                     x += xi_step;
                 }
             } else {
