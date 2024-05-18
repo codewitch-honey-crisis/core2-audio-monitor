@@ -44,6 +44,9 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         }
     }
     analyzer_box(analyzer_box &&rhs) {
+        m_state = 0;
+        memcpy(m_samples,rhs.m_samples,sizeof(m_samples));
+        memcpy(m_fft,rhs.m_fft,sizeof(m_fft));
         do_move_control(rhs);
     }
     const float *samples() const {
@@ -59,6 +62,9 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         memcpy(m_fft, values, window_size * sizeof(float));
     }
     analyzer_box &operator=(analyzer_box &&rhs) {
+        m_state = 0;
+        memcpy(m_samples,rhs.m_samples,sizeof(m_samples));
+        memcpy(m_fft,rhs.m_fft,sizeof(m_fft));
         do_move_control(rhs);
         return *this;
     }
