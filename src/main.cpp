@@ -176,13 +176,8 @@ extern "C" void app_main() {
     xTaskCreatePinnedToCore(
         drawing_task, "Drawing Task", 4096, nullptr, 1, &drawing_task_handle, 1);
 #ifndef ARDUINO
-    int count = 0;
-    while (1) {
-        if (count++ == 10) {
-            vTaskDelay(5);
-            count = 0;
-        }
-    }
+    // don't need this thread.
+    vTaskDelete(NULL);
 #endif
 }
 
