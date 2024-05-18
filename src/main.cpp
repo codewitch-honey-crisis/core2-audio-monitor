@@ -139,12 +139,12 @@ static void drawing_task(void *param) {
             if (millis() >= fps_ts + 1000) {
                 fps_ts = millis();
                 if(frames==0) {
-                    printf("FPS: < 1 / Avg: %d ms\n",ms);    
+                    printf("FPS: < 1 / Avg: %d ms\n",(int)ms);    
                 } else {
                     const int fps = roundf(1000.0f/((float)(ms/(float)frames)));
                     const int ms_avg = ms/frames;
                     frames = 0;
-                    printf("FPS: %d / Avg: %lums\n",fps,ms_avg);
+                    printf("FPS: %d / Avg: %dms\n",fps,(int)ms_avg);
                     
                 }
                 ms = 0;
@@ -171,7 +171,7 @@ extern "C" void app_main() {
     lcd_active_screen(&main_screen);
     // create a processing task to update the sample stream/fft
     xTaskCreatePinnedToCore(
-        processing_task, "Processing Task", 1024, nullptr, 2, &processing_task_handle, 0);
+        processing_task, "Processing Task", 1024, nullptr, 3, &processing_task_handle, 0);
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     main_sampler.initialize(I2S_NUM_0, chan_cfg, pdm_rx_cfg, processing_task_handle);
 #else
@@ -180,7 +180,7 @@ extern "C" void app_main() {
     // create a drawing task to update our UI
     // need 4096 words for printf
     xTaskCreatePinnedToCore(
-        drawing_task, "Drawing Task", 4096, nullptr, 1, &drawing_task_handle, 1);
+        drawing_task, "Drawing Task", 4096, nullptr, 2, &drawing_task_handle, 1);
 #ifndef ARDUINO
     // don't need this thread.
     vTaskDelete(NULL);

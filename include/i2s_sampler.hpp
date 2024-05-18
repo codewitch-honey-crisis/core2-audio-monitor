@@ -170,7 +170,7 @@ template<size_t WindowSize> class i2s_sampler {
         // start a task to read samples from the ADC
         TaskHandle_t readerTaskHandle;
         xTaskCreatePinnedToCore(
-            i2s_reader_task, "i2s Reader Task", 8192, this, 1, &readerTaskHandle, 0);
+            i2s_reader_task, "i2s Reader Task", 8192, this, 2, &readerTaskHandle, 0);
     }
 };
 
