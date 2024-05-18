@@ -138,13 +138,17 @@ static void drawing_task(void *param) {
             ++frames;
             if (millis() >= fps_ts + 1000) {
                 fps_ts = millis();
-                int fps = frames==0?-1:roundf(1000.0f/((float)(ms/(float)frames)));
-                int ms_avg = frames==0?-1:ms/frames;
-                printf("FPS: %d / Avg: %lums\n",fps,ms_avg);
-                frames = 0;
+                if(frames==0) {
+                    printf("FPS: < 1 / Avg: %d ms\n",ms);    
+                } else {
+                    const int fps = roundf(1000.0f/((float)(ms/(float)frames)));
+                    const int ms_avg = ms/frames;
+                    frames = 0;
+                    printf("FPS: %d / Avg: %lums\n",fps,ms_avg);
+                    
+                }
                 ms = 0;
             }
-
             xTaskNotify(drawing_task_handle, 0, eSetValueWithOverwrite);
         }
     }
