@@ -27,7 +27,11 @@ screen_t *lcd_active_screen() {
 void lcd_active_screen(screen_t* value) {
     if(lcd_screen_handle!=nullptr) {
         while(lcd_screen_handle->flushing()) {
-            vTaskDelay(5);
+            static int count = 0;
+            if(count++==10) {
+                vTaskDelay(5);
+                count = 0;
+            }
         }
         lcd_screen_handle->on_flush_callback(nullptr);
         

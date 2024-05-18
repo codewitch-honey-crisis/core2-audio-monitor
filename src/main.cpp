@@ -138,7 +138,9 @@ static void drawing_task(void *param) {
             ++frames;
             if (millis() >= fps_ts + 1000) {
                 fps_ts = millis();
-                printf("FPS: %d / Avg: %lums\n",frames,frames>0?ms/frames:-1);
+                int fps = frames==0?-1:roundf(1000.0f/((float)(ms/(float)frames)));
+                int ms_avg = frames==0?-1:ms/frames;
+                printf("FPS: %d / Avg: %lums\n",fps,ms_avg);
                 frames = 0;
                 ms = 0;
             }
