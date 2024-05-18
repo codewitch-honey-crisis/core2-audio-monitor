@@ -1,5 +1,7 @@
 #include "palette.hpp"
 using rgb565 = gfx::rgb_pixel<16>;
+// this is much smaller than it looks. Each pixel declaration resolves to
+// a uint16_t literal const. The entire size of this array is 512 bytes
 const rgb565 analyzer_palette[] = {
     rgb565(0, 0, 3),   rgb565(0, 0, 3),   rgb565(0, 0, 3),
     rgb565(0, 1, 3),   rgb565(0, 1, 3),   rgb565(0, 1, 3),
