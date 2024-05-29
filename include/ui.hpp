@@ -15,6 +15,7 @@ extern uint8_t* const lcd_transfer_buffer2;
 #endif
 
 extern screen_t main_screen;
+static const auto waveform_color = gfx::rgb_pixel<16>(0xfff,true);
 
 template<typename ControlSurfaceType, size_t WindowSize = 512>
 class analyzer_box : public uix::control<ControlSurfaceType> {
@@ -105,11 +106,14 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             static_assert(pixel_type::bit_depth==16,"this code needs to be ported for your display format");
             const size_t stride = m_spectrogram.dimensions().width * 2;
             uint8_t* p = m_spectrogram.begin();
+            typename screen_t::pixel_type mapped;
+                    
             if(p!=nullptr) { // in case we didn't have memory
                 // scroll left and put the new values in
                 for(int y = 0; y<m_spectrogram.dimensions().height;++y) {
                     memmove(p,p+2,stride-2);
-                    *(uint16_t*)&p[stride-2]=analyzer_palette[std::max(0, std::min(255, (int)m_fft[m_spectrogram.dimensions().height-y-1]))].value();
+                    analyzer_palette<typename screen_t::pixel_type>::instance.map(std::max(0, std::min(255, (int)m_fft[m_spectrogram.dimensions().height-y-1])),&mapped);
+                    *(uint16_t*)&p[stride-2]=mapped.value();
                     p+=stride;
                 }
             }
@@ -148,8 +152,11 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                     }
                     ave *= .25f;
                     int peak_value = std::min(float(destination.dimensions().height/2), 0.25f * ave);
-                    gfx::draw::line_aa(destination,gfx::srect16(x, destination.dimensions().height - peak_value, x+ xi_step - 1, destination.dimensions().height - peak_value), analyzer_palette[std::max(0,std::min(255,peak_value+135))]); 
-                    gfx::draw::filled_rectangle(destination,gfx::srect16(gfx::spoint16(x, destination.dimensions().height - bar_value),gfx::ssize16( xi_step - 1, bar_value)),analyzer_palette[std::max(0,std::min(255,bar_value+135))]);
+                    typename screen_t::pixel_type mapped;
+                    analyzer_palette<typename screen_t::pixel_type>::instance.map(std::max(0,std::min(255,peak_value+135)),&mapped);
+                    gfx::draw::line_aa(destination,gfx::srect16(x, destination.dimensions().height - peak_value, x+ xi_step - 1, destination.dimensions().height - peak_value), mapped); 
+                    analyzer_palette<typename screen_t::pixel_type>::instance.map(std::max(0,std::min(255,bar_value+135)),&mapped);
+                    gfx::draw::filled_rectangle(destination,gfx::srect16(gfx::spoint16(x, destination.dimensions().height - bar_value),gfx::ssize16( xi_step - 1, bar_value)),mapped);
                     x += xi_step;
                 }
             } else {
@@ -168,7 +175,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                                         y_offset + m_samples_buffer[i - 4] * 3,
                                         sample_x + x_step,
                                         y_offset + m_samples_buffer[i] * 3),
-                            gfx::rgb_pixel<16>(0xfff,true));
+                            waveform_color);
             sample_x += x_step;
         }
     }
