@@ -52,7 +52,6 @@ public:
             }
         }
         pixel->template channel<gfx::channel_name::index>(ii);
-        //printf("nearest was %d\r\n",ii);
         return gfx::gfx_result::success;
     }
 };
