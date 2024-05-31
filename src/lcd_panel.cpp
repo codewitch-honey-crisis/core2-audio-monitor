@@ -14,10 +14,10 @@ static esp_lcd_panel_handle_t lcd_handle;
 static screen_t* lcd_screen_handle=nullptr;
 #ifndef USE_SINGLE_BUFFER
 // use two 32KB buffers (DMA)
-uint8_t lcd_transfer_buffer1[32 * 1024];
-uint8_t lcd_transfer_buffer2[32 * 1024];
+uint8_t lcd_transfer_buffer1[lcd_transfer_buffer_size];
+uint8_t lcd_transfer_buffer2[lcd_transfer_buffer_size];
 #else
-uint8_t lcd_transfer_buffer1[64 * 1024];
+uint8_t lcd_transfer_buffer1[lcd_transfer_buffer_size];
 uint8_t* const lcd_transfer_buffer2 = nullptr;
 #endif
 

@@ -79,7 +79,7 @@ static TaskHandle_t processing_task_handle;
 static TaskHandle_t drawing_task_handle;
 
 // the screen/control definitions
-screen_t main_screen({320, 240}, 32 * 1024, lcd_transfer_buffer1, lcd_transfer_buffer2);
+screen_t main_screen({320, 240}, lcd_transfer_buffer_size, lcd_transfer_buffer1, lcd_transfer_buffer2);
 analyzer_box_t main_analyzer(main_screen);
 
 // for the touch panel
