@@ -12,6 +12,7 @@
 #include "ui.hpp"
 #include <ft6336.hpp>
 #include <m5core2_power.hpp>
+
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
 #    include <driver/i2s_pdm.h>
 #else
@@ -188,6 +189,5 @@ extern "C" void app_main() {
 }
 
 void loop() {
-    // getting rid of this clears up CPU
-    vTaskDelete(NULL);
+    // do nothing
 }
