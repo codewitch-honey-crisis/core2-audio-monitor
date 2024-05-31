@@ -11,7 +11,7 @@ extern uint8_t lcd_transfer_buffer1[];
 extern uint8_t lcd_transfer_buffer2[];
 #else
 extern uint8_t lcd_transfer_buffer1[];
-extern uint8_t *const lcd_transfer_buffer2;
+constexpr uint8_t *const lcd_transfer_buffer2 = nullptr;
 #endif
 
 extern screen_t main_screen;
