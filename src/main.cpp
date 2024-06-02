@@ -4,11 +4,11 @@
 #    include <freertos/FreeRTOS.h>
 #    include <freertos/task.h>
 #endif
-#include <esp_i2c.hpp>
 #include "i2s_sampler.hpp"
 #include "lcd_panel.hpp"
 #include "processor.hpp"
 #include "ui.hpp"
+#include <esp_i2c.hpp>
 #include <ft6336.hpp>
 #include <m5core2_power.hpp>
 
