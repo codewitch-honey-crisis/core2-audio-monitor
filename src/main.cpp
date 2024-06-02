@@ -1,11 +1,10 @@
 #if __has_include(<Arduino.h>)
 #    include <Arduino.h>
-#    define I2C_INTERNAL Wire1
 #else
 #    include <freertos/FreeRTOS.h>
 #    include <freertos/task.h>
-#    define I2C_INTERNAL I2C_NUM_1
 #endif
+#include <esp_i2c.hpp>
 #include "i2s_sampler.hpp"
 #include "lcd_panel.hpp"
 #include "processor.hpp"
@@ -26,8 +25,8 @@ static uint32_t millis() {
     return ((uint32_t)pdTICKS_TO_MS(xTaskGetTickCount()));
 }
 #endif
-static ft6336<320, 280> touch(I2C_INTERNAL);
-static m5core2_power power;
+static ft6336<320, 280> touch(esp_i2c<1,21,22>::instance);
+static m5core2_power power(esp_i2c<1,21,22>::instance);
 // approx 30ms of audio @ 16KHz
 #define WINDOW_SIZE 512
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
