@@ -8,6 +8,8 @@
 #include "lcd_panel.hpp"
 #include "processor.hpp"
 #include "ui.hpp"
+
+// these libs work with the ESP-IDF and Arduino
 #include <esp_i2c.hpp>
 #include <ft6336.hpp>
 #include <m5core2_power.hpp>
