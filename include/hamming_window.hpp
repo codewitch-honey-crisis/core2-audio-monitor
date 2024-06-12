@@ -11,9 +11,9 @@ template<size_t WindowSize = 512> class hamming_window {
   hamming_window()
   {
     // create the constants for a hamming window
-    const float arg = M_PI * 2.0 / window_size;
+    const float arg = ((float)M_PI) * 2.0f / window_size;
     for (int i = 0; i < window_size; i++) {
-      float float_value = 0.5 - (0.5 * cos(arg * (i + 0.5)));
+      float float_value = 0.5f - (0.5f * cosf(arg * (i + 0.5f)));
       // Scale it to fixed point and round it.
       m_coefficients[i] = float_value;
     }
