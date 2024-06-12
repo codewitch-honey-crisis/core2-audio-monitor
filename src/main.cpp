@@ -159,6 +159,7 @@ static void drawing_task(void *param) {
 void setup() {
     setCpuFrequencyMhz(240);
     Serial.begin(115200);
+    Serial.printf("Arduino v. %d.%d\n",ESP_ARDUINO_VERSION_MAJOR,ESP_ARDUINO_VERSION_MINOR);
 #else
 extern "C" void app_main() {
 #endif
