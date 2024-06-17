@@ -106,8 +106,8 @@ void lcd_panel_init() {
     esp_lcd_panel_invert_color(lcd_handle, true);
     // Turn on the screen
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-    esp_lcd_panel_disp_on_off(lcd_handle, false);
+    esp_lcd_panel_disp_on_off(lcd_handle, true);
 #else
-    esp_lcd_panel_disp_off(lcd_handle, false);
+    esp_lcd_panel_disp_off(lcd_handle, true);
 #endif
 }
