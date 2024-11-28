@@ -1,7 +1,7 @@
 #pragma once
 #include "hamming_window.hpp"
 #include <stdint.h>
-#include <tools/kiss_fftr.h>
+#include "kiss_fftr.h"
 
 template<size_t WindowSize = 512> class processor {
  private:

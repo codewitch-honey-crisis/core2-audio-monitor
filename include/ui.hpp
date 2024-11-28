@@ -1,22 +1,7 @@
 #pragma once
-#include "lcd_panel.hpp"
 #include "palette.hpp"
-using surface_t = screen_t::control_surface_type;
-
-// define these in a CPP somewhere:
-// using lcd_panel.cpp
-#ifndef USE_SINGLE_BUFFER
-// use two 32KB buffers (DMA)
-extern uint8_t lcd_transfer_buffer1[];
-extern uint8_t lcd_transfer_buffer2[];
-#else
-extern uint8_t lcd_transfer_buffer1[];
-constexpr uint8_t *const lcd_transfer_buffer2 = nullptr;
-#endif
-
-extern screen_t main_screen;
 static const auto waveform_color = gfx::rgb_pixel<16>(0xfff, true);
-
+using screen_t = uix::screen<gfx::rgb_pixel<LCD_BIT_DEPTH>>;
 template<typename ControlSurfaceType, size_t WindowSize = 512>
 class analyzer_box : public uix::control<ControlSurfaceType> {
    public:
@@ -39,6 +24,15 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
    public:
     analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
         : base_type(parent, palette), m_spectrogram({0, 0}, nullptr) {
+        for (int i = 0; i < window_size; i++) {
+            m_bar_chart[i] = 0.0f;
+        }
+        for (int i = 0; i < window_size; i++) {
+            m_bar_chart_peaks[i] = 0.0f;
+        }
+    }
+    analyzer_box()
+        : base_type(), m_spectrogram({0, 0}, nullptr) {
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
         }
@@ -83,7 +77,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             free(m_spectrogram.begin());
         }
     }
-    virtual void on_before_render() {
+    virtual void on_before_paint() override {
         if (m_state == 0) {
             // create the spectrogram bitmap
             m_spectrogram = gfx::create_bitmap<pixel_type, palette_type>(
@@ -118,7 +112,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                     memmove(p, p + 2, stride - 2);
                     analyzer_palette<typename screen_t::pixel_type>::instance.map(
                         gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
-                    *(uint16_t *)&p[stride - 2] = mapped.value();
+                    *(uint16_t *)&p[stride - 2] = mapped.swapped();
                     p += stride;
                 }
             }
@@ -130,7 +124,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     virtual void on_release() override {
         ++m_state;
         if (m_state == 2) {
-            m_spectrogram.fill(m_spectrogram.bounds(), lcd_active_screen()->background_color());
+            m_spectrogram.fill(m_spectrogram.bounds(),screen_t::pixel_type(0,true));
         }
         if (m_state > 2) {
             m_state = 1;
@@ -162,7 +156,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                     typename screen_t::pixel_type mapped;
                     analyzer_palette<typename screen_t::pixel_type>::instance.map(
                         gfx::helpers::clamp(peak_value + 135, 0, 255), &mapped);
-                    gfx::draw::line_aa(destination,
+                    gfx::draw::line(destination,
                                        gfx::srect16(x,
                                                     destination.dimensions().height - peak_value,
                                                     x + xi_step - 1,
@@ -207,6 +201,6 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         }
     }
 };
-using analyzer_box_t = analyzer_box<surface_t>;
+using analyzer_box_t = analyzer_box<typename screen_t::control_surface_type>;
 
 extern analyzer_box_t main_analyzer;
