@@ -51,7 +51,6 @@ static uint8_t *lcd_transfer_buffer = nullptr;
 static uint8_t *lcd_transfer_buffer2 = nullptr;
 // 0 = no flushes in progress, otherwise flushing
 static esp_lcd_panel_handle_t lcd_handle = nullptr;
-static volatile int flushing = 0;
 static uix::display disp;
 
 static ft6336<320, 280> touch(esp_i2c<1,21,22>::instance);
@@ -63,17 +62,12 @@ static bool lcd_flush_ready(esp_lcd_panel_io_handle_t panel_io,
                             esp_lcd_panel_io_event_data_t *edata,
                             void *user_ctx) {
     disp.flush_complete();
-    flushing = 0;
     return true;
 }
 
 // flush a bitmap to the display
 static void uix_on_flush(const rect16& bounds,
                              const void *bitmap, void* state) {
-    if(flushing) {
-        puts("Flush too soon");
-    }
-    flushing=1;
     // adjust end coordinates for a quirk of Espressif's API (add 1 to each)
     esp_lcd_panel_draw_bitmap(lcd_handle, bounds.x1, bounds.y1, bounds.x2 + 1, bounds.y2 + 1,
                               (void *)bitmap);
