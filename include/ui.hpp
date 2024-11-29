@@ -201,10 +201,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                                                     0, destination.dimensions().height / 2))
                                       .crop(clip),
                                   m_spectrogram,
-                                  clip2,
-                                  gfx::bitmap_resize::crop,
-                                  nullptr,
-                                  nullptr);
+                                  clip2);
             }
         }
         if(m_fps_font!=nullptr && clip.intersects(m_fps_bounds)) {
