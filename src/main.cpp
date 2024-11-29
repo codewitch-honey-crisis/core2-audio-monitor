@@ -21,6 +21,12 @@
 #include "processor.hpp"
 #include "ui.hpp"
 
+// The font for the frame counter
+#define VGA_8X8_IMPLEMENTATION
+#include "assets/vga_8x8.h"
+static gfx::const_buffer_stream text_font_stm(vga_8x8,sizeof(vga_8x8));
+static gfx::win_font text_font(text_font_stm);
+
 // these libs work with the ESP-IDF and Arduino
 #include <esp_i2c.hpp>
 #include <ft6336.hpp>
@@ -242,7 +248,7 @@ static TaskHandle_t drawing_task_handle;
 
 // the screen/control definitions
 screen_t main_screen;
-analyzer_box_t main_analyzer;
+analyzer_box_t main_analyzer(&text_font);
 
 static void processing_task(void *param);
 
@@ -280,13 +286,16 @@ static void drawing_task(void *param) {
                 fps_ts = millis();
                 if(frames==0) {
                     printf("FPS: < 1 / Avg: %d ms\n",(int)ms);    
+                    main_analyzer.fps(0);
                 } else {
                     const int fps = roundf(1000.0f/((float)(ms/(float)frames)));
                     const int ms_avg = ms/frames;
+                    main_analyzer.fps(fps);
                     frames = 0;
                     printf("FPS: %d / Avg: %dms\n",fps,(int)ms_avg);
                     
                 }
+                
                 ms = 0;
             }
             xTaskNotify(drawing_task_handle, 0, eSetValueWithOverwrite);
@@ -307,6 +316,7 @@ extern "C" void app_main() {
     power.lcd_voltage(3);
     lcd_panel_init();
     touch.initialize();
+    text_font.initialize();
     disp.buffer_size(lcd_transfer_buffer_size);
     disp.buffer1(lcd_transfer_buffer);
     disp.buffer2(lcd_transfer_buffer2);

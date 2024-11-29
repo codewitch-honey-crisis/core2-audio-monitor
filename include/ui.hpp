@@ -20,10 +20,15 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     float m_bar_chart_peaks[window_size];
     bitmap_type m_spectrogram;
     int m_state = 0;
-
+    gfx::font* m_fps_font;
+    int m_fps;
+    uix::srect16 m_fps_bounds;
+    char m_fps_sz[16];
+    gfx::text_info m_fps_ti;
    public:
-    analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
-        : base_type(parent, palette), m_spectrogram({0, 0}, nullptr) {
+    analyzer_box(gfx::font* fps_font, uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
+        : base_type(parent, palette), m_spectrogram({0, 0}, nullptr), m_fps_font(fps_font), m_fps(0) {
+        
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
         }
@@ -31,8 +36,8 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             m_bar_chart_peaks[i] = 0.0f;
         }
     }
-    analyzer_box()
-        : base_type(), m_spectrogram({0, 0}, nullptr) {
+    analyzer_box(gfx::font* fps_font = nullptr)
+        : base_type(), m_spectrogram({0, 0}, nullptr), m_fps_font(fps_font), m_fps(0) {
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
         }
@@ -45,6 +50,22 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         memcpy(m_samples, rhs.m_samples, sizeof(m_samples));
         memcpy(m_fft, rhs.m_fft, sizeof(m_fft));
         do_move_control(rhs);
+    }
+    int fps() const {
+        return m_fps;
+    }
+    void fps(int value) {
+        m_fps = value;
+        if(m_fps_font!=nullptr) {
+            m_fps_ti.text_font = m_fps_font;
+            m_fps_ti.encoding = &gfx::text_encoding::utf8;
+            itoa(m_fps,m_fps_sz,10);
+            strcat(m_fps_sz," FPS");
+            m_fps_ti.text_sz(m_fps_sz);
+            gfx::size16 area;
+            m_fps_font->measure(-1,m_fps_ti,&area);
+            m_fps_bounds = gfx::srect16(this->dimensions().width-area.width-2,0,this->dimensions().width-1,area.height);
+        }
     }
     const float *samples() const {
         return m_samples;
@@ -185,6 +206,10 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                                   nullptr,
                                   nullptr);
             }
+        }
+        if(m_fps_font!=nullptr && clip.intersects(m_fps_bounds)) {
+            gfx::rgb_pixel<16> px(0xFFFF,true);
+            gfx::draw::text(destination,m_fps_bounds,m_fps_ti,px);
         }
         const float x_step = 4 * ((float)destination.dimensions().width / (float)window_size);
         const float y_offset = 60.0f;
