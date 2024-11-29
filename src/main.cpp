@@ -298,7 +298,7 @@ void setup() {
     setCpuFrequencyMhz(240);
     Serial.begin(115200);
 #else
-void uix_yield_callback(void* state) {
+void uix_on_yield(void* state) {
     taskYIELD();
 }
 extern "C" void app_main() {
@@ -311,7 +311,7 @@ extern "C" void app_main() {
     disp.buffer1(lcd_transfer_buffer);
     disp.buffer2(lcd_transfer_buffer2);
 #ifndef ARDUINO
-    disp.on_yield_callback(uix_yield_callback);
+    disp.on_yield_callback(uix_on_yield);
 #endif
     disp.on_flush_callback(uix_on_flush);
     disp.on_touch_callback(uix_on_touch);
@@ -333,10 +333,6 @@ extern "C" void app_main() {
     // need 4096 words for printf
     xTaskCreatePinnedToCore(
         drawing_task, "Drawing Task", 4096, nullptr, 2, &drawing_task_handle, 1);
-#ifndef ARDUINO
-    // don't need this thread.
-    vTaskDelete(NULL);
-#endif
 }
 
 void loop() {
