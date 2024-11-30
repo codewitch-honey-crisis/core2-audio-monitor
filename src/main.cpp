@@ -327,9 +327,9 @@ extern "C" void app_main() {
     main_analyzer.bounds(main_screen.bounds());
     main_screen.register_control(main_analyzer);
     disp.active_screen(main_screen);
-
+    UBaseType_t prior = 10; // base priority
     // create a processing task to update the sample stream/fft
-    xTaskCreatePinnedToCore(processing_task, "Processing Task", 1024, nullptr, 3, &processing_task_handle, 0);
+    xTaskCreatePinnedToCore(processing_task, "Processing Task", 1024, nullptr, prior+2, &processing_task_handle, 0);
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     main_sampler.initialize(I2S_NUM_0, chan_cfg, pdm_rx_cfg, processing_task_handle);
 #else
@@ -338,7 +338,7 @@ extern "C" void app_main() {
     // create a drawing task to update our UI
     // need 4096 words for printf
     xTaskCreatePinnedToCore(
-        drawing_task, "Drawing Task", 4096, nullptr, 2, &drawing_task_handle, 1);
+        drawing_task, "Drawing Task", 4096, nullptr, prior+1, &drawing_task_handle, 1);
 }
 
 void loop() {
