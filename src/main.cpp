@@ -67,8 +67,6 @@ static volatile int flushing = -1;
 static bool lcd_flush_ready(esp_lcd_panel_io_handle_t panel_io,
                             esp_lcd_panel_io_event_data_t *edata,
                             void *user_ctx) {
-    // in ISR, cannot log to serial
-    flushing = 0;
     disp.flush_complete();
     return true;
 }
@@ -76,17 +74,9 @@ static bool lcd_flush_ready(esp_lcd_panel_io_handle_t panel_io,
 // flush a bitmap to the display
 static void uix_on_flush(const rect16& bounds,
                              const void *bitmap, void* state) {
-    // if(flushing==1) {
-    //     puts("Warning: DMA transferinitiated too soon.");
-    //     while(1);
-    // } else if(flushing==0){
-    //     puts("Previous flush completion");
-    // }
-    flushing = 1;
     // adjust end coordinates for a quirk of Espressif's API (add 1 to each)
     esp_lcd_panel_draw_bitmap(lcd_handle, bounds.x1, bounds.y1, bounds.x2 + 1, bounds.y2 + 1,
                               (void *)bitmap);
-    //puts("Flush start");
 }
 // initialize the screen using the esp panel API
 // htcw_gfx no longer has intrinsic display driver support
@@ -282,7 +272,6 @@ static void drawing_task(void *param) {
     int frames = 0;
     uint32_t fps_ts = millis();
     unsigned long ms = 0;
-    unsigned int iteration = 0;
     while (true) {
         // wait to be told to redraw
         uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
@@ -296,17 +285,15 @@ static void drawing_task(void *param) {
             ++frames;
             if (millis() >= fps_ts + 1000) {
                 fps_ts = millis();
-                printf("#%d: ",iteration++);
                 if(frames==0) {
-                    printf("FPS: < 1 / Avg: %d ms\n",(int)ms);    
+                    printf("Total FPS: < 1 / Render time: %d ms\n",(int)ms);    
                     main_analyzer.fps(0);
                 } else {
                     const int fps = roundf(1000.0f/((float)(ms/(float)frames)));
                     const int ms_avg = ms/frames;
                     main_analyzer.fps(fps);
+                    printf("Total FPS: %d / Render FPS: %d, Avg render time: %dms\n",frames,fps,(int)ms_avg);
                     frames = 0;
-                    printf("FPS: %d / Avg: %dms\n",fps,(int)ms_avg);
-                    
                 }
                 
                 ms = 0;
