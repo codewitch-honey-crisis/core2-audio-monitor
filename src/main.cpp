@@ -21,6 +21,9 @@
 #include "processor.hpp"
 #include "ui.hpp"
 
+// for the battery meter
+#define ICONS_IMPLEMENTATION
+#include "assets/icons.h"
 // The font for the frame counter
 #define VGA_8X8_IMPLEMENTATION
 #include "assets/vga_8x8.h"
@@ -282,6 +285,9 @@ static void drawing_task(void *param) {
             ms += (end_ts - start_ts);
             ++frames;
             if (millis() >= fps_ts + 1000) {
+                main_analyzer.power_level(power.battery_level());
+                main_analyzer.power_ac(power.ac_in());
+            
                 fps_ts = millis();
                 if(frames==0) {
                     printf("Total FPS: < 1 / Render time: %d ms\n",(int)ms);    

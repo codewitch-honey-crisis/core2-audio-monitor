@@ -1,4 +1,6 @@
 #pragma once
+
+#include "assets/icons.h"
 #include "palette.hpp"
 static const auto waveform_color = gfx::rgb_pixel<16>(0xfff, true);
 using screen_t = uix::screen<gfx::rgb_pixel<LCD_BIT_DEPTH>>;
@@ -25,9 +27,11 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     uix::srect16 m_fps_bounds;
     char m_fps_sz[16];
     gfx::text_info m_fps_ti;
+    int m_power_level;
+    bool m_power_ac;
    public:
     analyzer_box(gfx::font* fps_font, uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
-        : base_type(parent, palette), m_spectrogram({0, 0}, nullptr), m_fps_font(fps_font), m_fps(0) {
+        : base_type(parent, palette), m_spectrogram({0, 0}, nullptr), m_fps_font(fps_font), m_fps(0), m_power_level(0),m_power_ac(false) {
         
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
@@ -37,7 +41,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         }
     }
     analyzer_box(gfx::font* fps_font = nullptr)
-        : base_type(), m_spectrogram({0, 0}, nullptr), m_fps_font(fps_font), m_fps(0) {
+        : base_type(), m_spectrogram({0, 0}, nullptr), m_fps_font(fps_font), m_fps(0) ,m_power_level(0),m_power_ac(false){
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
         }
@@ -79,6 +83,15 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     void fft(const float *values) {
         memcpy(m_fft, values, window_size * sizeof(float));
     }
+    int power_level() const { return m_power_level;}
+    void power_level(int value) { 
+        m_power_level = value;
+    }
+    bool power_ac() const { return m_power_ac;}
+    void power_ac(bool value) { 
+        m_power_ac = value;
+    }
+    
     analyzer_box &operator=(analyzer_box &&rhs) {
         m_state = 0;
         memcpy(m_samples, rhs.m_samples, sizeof(m_samples));
@@ -204,9 +217,29 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                                   clip2);
             }
         }
+        constexpr static const gfx::rgb_pixel<16> white(0xFFFF,true);
         if(m_fps_font!=nullptr && clip.intersects(m_fps_bounds)) {
-            gfx::rgb_pixel<16> px(0xFFFF,true);
-            gfx::draw::text(destination,m_fps_bounds,m_fps_ti,px);
+            gfx::draw::text(destination,m_fps_bounds,m_fps_ti,white);
+        }
+            // show in green if it's on ac power.
+        constexpr static const gfx::rgb_pixel<16> green(0,63,0);
+        constexpr static const gfx::rgb_pixel<16> red(31,0,0);
+        auto px = m_power_ac?green:white;
+        if(!m_power_ac && m_power_level<25) {
+            px=red;
+        }
+        if(clip.intersects(gfx::srect16(0,0,27,24))) {
+            // draw an empty battery
+            gfx::const_bitmap<gfx::alpha_pixel<8>> cico({27,24},faBatteryEmpty);
+            gfx::draw::icon(destination,gfx::spoint16::zero(),cico,px);
+            // now fill it up
+            if(m_power_level==100) {
+                // if we're at 100% fill the entire thing
+                gfx::draw::filled_rectangle(destination,gfx::srect16(3,7,22,16),px);
+            } else {
+                // otherwise leave a small border
+                gfx::draw::filled_rectangle(destination,gfx::srect16(4,9,4+(0.18f*m_power_level),14),px);
+            }
         }
         const float x_step = 4 * ((float)destination.dimensions().width / (float)window_size);
         const float y_offset = 60.0f;
@@ -214,7 +247,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         float sample_x = 0.0f;
         for (int i = 4; i < window_size; i += 4) {
             gfx::draw::line(destination,
-                            gfx::rect16(sample_x,
+                            gfx::srect16(sample_x,
                                         y_offset + m_samples_buffer[i - 4] * 3,
                                         sample_x + x_step,
                                         y_offset + m_samples_buffer[i] * 3),
