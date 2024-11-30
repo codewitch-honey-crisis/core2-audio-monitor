@@ -262,7 +262,6 @@ static void processing_task(void *param) {
             main_processor.update(input);
             main_analyzer.samples(main_processor.samples());
             main_analyzer.fft(main_processor.fft());
-            xTaskNotify(processing_task_handle, 0, eSetValueWithOverwrite);
             xTaskNotify(drawing_task_handle, 1, eSetValueWithOverwrite);
         }
     }
@@ -275,7 +274,6 @@ static void drawing_task(void *param) {
     while (true) {
         // wait to be told to redraw
         uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
-        taskYIELD();
         if (ulNotificationValue != 0) {
             uint32_t start_ts = millis();
             main_analyzer.invalidate();
@@ -298,7 +296,6 @@ static void drawing_task(void *param) {
                 
                 ms = 0;
             }
-            xTaskNotify(drawing_task_handle, 0, eSetValueWithOverwrite);
         }
     }
 }
