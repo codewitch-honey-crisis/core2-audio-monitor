@@ -62,11 +62,13 @@ static uix::display disp;
 static ft6336<320, 280> touch(esp_i2c<1,21,22>::instance);
 static m5core2_power power(esp_i2c<1,21,22>::instance);
 
-
+static volatile int flushing = -1;
 // indicates the LCD DMA transfer is complete
 static bool lcd_flush_ready(esp_lcd_panel_io_handle_t panel_io,
                             esp_lcd_panel_io_event_data_t *edata,
                             void *user_ctx) {
+    // in ISR, cannot log to serial
+    flushing = 0;
     disp.flush_complete();
     return true;
 }
@@ -74,9 +76,17 @@ static bool lcd_flush_ready(esp_lcd_panel_io_handle_t panel_io,
 // flush a bitmap to the display
 static void uix_on_flush(const rect16& bounds,
                              const void *bitmap, void* state) {
+    // if(flushing==1) {
+    //     puts("Warning: DMA transferinitiated too soon.");
+    //     while(1);
+    // } else if(flushing==0){
+    //     puts("Previous flush completion");
+    // }
+    flushing = 1;
     // adjust end coordinates for a quirk of Espressif's API (add 1 to each)
     esp_lcd_panel_draw_bitmap(lcd_handle, bounds.x1, bounds.y1, bounds.x2 + 1, bounds.y2 + 1,
                               (void *)bitmap);
+    //puts("Flush start");
 }
 // initialize the screen using the esp panel API
 // htcw_gfx no longer has intrinsic display driver support
@@ -272,9 +282,11 @@ static void drawing_task(void *param) {
     int frames = 0;
     uint32_t fps_ts = millis();
     unsigned long ms = 0;
+    unsigned int iteration = 0;
     while (true) {
         // wait to be told to redraw
         uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
+        taskYIELD();
         if (ulNotificationValue != 0) {
             uint32_t start_ts = millis();
             main_analyzer.invalidate();
@@ -284,6 +296,7 @@ static void drawing_task(void *param) {
             ++frames;
             if (millis() >= fps_ts + 1000) {
                 fps_ts = millis();
+                printf("#%d: ",iteration++);
                 if(frames==0) {
                     printf("FPS: < 1 / Avg: %d ms\n",(int)ms);    
                     main_analyzer.fps(0);
@@ -332,8 +345,7 @@ extern "C" void app_main() {
     disp.active_screen(main_screen);
 
     // create a processing task to update the sample stream/fft
-    xTaskCreatePinnedToCore(
-        processing_task, "Processing Task", 1024, nullptr, 3, &processing_task_handle, 0);
+    xTaskCreatePinnedToCore(processing_task, "Processing Task", 1024, nullptr, 3, &processing_task_handle, 0);
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     main_sampler.initialize(I2S_NUM_0, chan_cfg, pdm_rx_cfg, processing_task_handle);
 #else
