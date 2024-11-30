@@ -265,7 +265,8 @@ static void processing_task(void *param) {
             main_processor.update(input);
             main_analyzer.samples(main_processor.samples());
             main_analyzer.fft(main_processor.fft());
-            xTaskNotify(drawing_task_handle, 1, eSetValueWithOverwrite);
+            
+            xTaskNotify(drawing_task_handle, 1, eIncrement);
         }
     }
 }

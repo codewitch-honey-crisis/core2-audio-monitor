@@ -112,7 +112,7 @@ template<size_t WindowSize> class i2s_sampler {
             // reset the buffer position
             m_audioBufferPos = 0;
             // tell the writer task to save the data
-            xTaskNotify(m_processorTaskHandle, 1, eSetValueWithOverwrite);
+            xTaskNotify(m_processorTaskHandle, 1, eIncrement);
         }
     }
 
