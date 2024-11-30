@@ -336,11 +336,12 @@ extern "C" void app_main() {
     main_sampler.initialize(I2S_NUM_0, i2s_pins, i2s_config, processing_task_handle);
 #endif
     // create a drawing task to update our UI
-    // need 4096 words for printf
+    // need 4096 (bytes not words unlike the FreeRTOS docs say) for printf
     xTaskCreatePinnedToCore(
         drawing_task, "Drawing Task", 4096, nullptr, prior+1, &drawing_task_handle, 1);
 }
 
 void loop() {
-    // do nothing
+    // don't need this task
+    vTaskDelete(NULL);
 }
