@@ -291,7 +291,7 @@ static void drawing_task(void *param) {
                 } else {
                     const int fps = roundf(1000.0f/((float)(ms/(float)frames)));
                     const int ms_avg = ms/frames;
-                    main_analyzer.fps(fps);
+                    main_analyzer.fps(frames);
                     printf("Total FPS: %d / Render FPS: %d, Avg render time: %dms\n",frames,fps,(int)ms_avg);
                     frames = 0;
                 }
