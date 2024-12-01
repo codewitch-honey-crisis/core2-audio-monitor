@@ -57,10 +57,12 @@ template<size_t WindowSize> class i2s_sampler {
 #endif
     static void i2s_reader_task(void *param) {
         i2s_sampler *sampler = (i2s_sampler *)param;
-
+        const int maxBlockTime = pdMS_TO_TICKS(100);
         while (true) {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-            xSemaphoreTake(sampler->m_i2sSemaphore, portMAX_DELAY);
+            if(pdFALSE== xSemaphoreTake(sampler->m_i2sSemaphore, maxBlockTime)) {
+                continue;
+            }
             size_t bytesRead = 0;
             do {
                 // read data from the I2S peripheral
@@ -75,7 +77,7 @@ template<size_t WindowSize> class i2s_sampler {
 #else
             // wait for some data to arrive on the queue
             i2s_event_t evt;
-            if (xQueueReceive(sampler->m_i2sQueue, &evt, portMAX_DELAY) != pdPASS) {
+            if (xQueueReceive(sampler->m_i2sQueue, &evt, maxBlockTime) != pdPASS) {
                 continue;
             }
 
