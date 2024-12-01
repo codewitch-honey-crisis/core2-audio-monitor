@@ -251,7 +251,7 @@ static TaskHandle_t drawing_task_handle;
 
 // the screen/control definitions
 screen_t main_screen;
-analyzer_box_t main_analyzer(&text_font);
+analyzer_box_t main_analyzer;
 
 static void processing_task(void *param);
 
@@ -332,6 +332,7 @@ extern "C" void app_main() {
     main_screen.dimensions({320,240});
     main_screen.background_color(gfx::color<typename screen_t::pixel_type>::black);
     main_analyzer.bounds(main_screen.bounds());
+    main_analyzer.fps_font(&text_font);
     main_screen.register_control(main_analyzer);
     disp.active_screen(main_screen);
     UBaseType_t prior = 0; // base priority

@@ -29,9 +29,21 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     gfx::text_info m_fps_ti;
     int m_power_level;
     bool m_power_ac;
+    void update_fps_font() {
+        if(m_fps_font!=nullptr) {
+            m_fps_ti.text_font = m_fps_font;
+            m_fps_ti.encoding = &gfx::text_encoding::utf8;
+            itoa(m_fps,m_fps_sz,10);
+            strcat(m_fps_sz," FPS");
+            m_fps_ti.text_sz(m_fps_sz);
+            gfx::size16 area;
+            m_fps_font->measure(-1,m_fps_ti,&area);
+            m_fps_bounds = gfx::srect16(this->dimensions().width-area.width-2,0,this->dimensions().width-1,area.height);
+        }
+    }
    public:
-    analyzer_box(gfx::font* fps_font, uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
-        : base_type(parent, palette), m_spectrogram({0, 0}, nullptr), m_fps_font(fps_font), m_fps(0), m_power_level(0),m_power_ac(false) {
+    analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
+        : base_type(parent, palette), m_spectrogram({0, 0}, nullptr), m_fps_font(nullptr), m_fps(0), m_power_level(0),m_power_ac(true) {
         
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
@@ -40,8 +52,8 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             m_bar_chart_peaks[i] = 0.0f;
         }
     }
-    analyzer_box(gfx::font* fps_font = nullptr)
-        : base_type(), m_spectrogram({0, 0}, nullptr), m_fps_font(fps_font), m_fps(0) ,m_power_level(0),m_power_ac(false){
+    analyzer_box()
+        : base_type(), m_spectrogram({0, 0}, nullptr), m_fps_font(nullptr), m_fps(0) ,m_power_level(0),m_power_ac(true){
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
         }
@@ -55,21 +67,19 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         memcpy(m_fft, rhs.m_fft, sizeof(m_fft));
         do_move_control(rhs);
     }
+    gfx::font* fps_font() const {
+        return m_fps_font;
+    }
+    void fps_font(gfx::font* value) {
+        m_fps_font = value;
+        update_fps_font();
+    }
     int fps() const {
         return m_fps;
     }
     void fps(int value) {
         m_fps = value;
-        if(m_fps_font!=nullptr) {
-            m_fps_ti.text_font = m_fps_font;
-            m_fps_ti.encoding = &gfx::text_encoding::utf8;
-            itoa(m_fps,m_fps_sz,10);
-            strcat(m_fps_sz," FPS");
-            m_fps_ti.text_sz(m_fps_sz);
-            gfx::size16 area;
-            m_fps_font->measure(-1,m_fps_ti,&area);
-            m_fps_bounds = gfx::srect16(this->dimensions().width-area.width-2,0,this->dimensions().width-1,area.height);
-        }
+        update_fps_font();
     }
     const float *samples() const {
         return m_samples;
@@ -136,19 +146,47 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
         } else if (m_state == 2) {  // spectroanalyzer
             static_assert(pixel_type::template equals<gfx::rgb_pixel<16>>::value,
                           "this code needs to be ported for your display format");
-            const size_t stride = m_spectrogram.dimensions().width * 2;
-            uint8_t *p = m_spectrogram.begin();
             typename screen_t::pixel_type mapped;
-
-            if (p != nullptr) {  // in case we didn't have memory
-                // scroll left and put the new values in
-                for (int y = 0; y < m_spectrogram.dimensions().height; ++y) {
-                    memmove(p, p + 2, stride - 2);
-                    analyzer_palette<typename screen_t::pixel_type>::instance.map(
-                        gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
-                    *(uint16_t *)&p[stride - 2] = mapped.swapped();
-                    p += stride;
-                }
+            // scroll left and put the new values in
+            gfx::blt_span& bs = m_spectrogram;
+            switch(bs.pixel_width()) {
+                case 2:
+                    for (int y = 0; y < m_spectrogram.dimensions().height; ++y) {
+                        gfx::gfx_span s = bs.span(gfx::point16(0,y));
+                        memmove(s.data, s.data + bs.pixel_width(), s.length - bs.pixel_width());;
+                        analyzer_palette<typename screen_t::pixel_type>::instance.map(
+                            gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
+                        *(uint16_t *)&s.data[s.length - bs.pixel_width()] = mapped.swapped();
+                    }
+                    break;
+                case 4:
+                    for (int y = 0; y < m_spectrogram.dimensions().height; ++y) {
+                        gfx::gfx_span s = bs.span(gfx::point16(0,y));
+                        memmove(s.data, s.data + bs.pixel_width(), s.length - bs.pixel_width());;
+                        analyzer_palette<typename screen_t::pixel_type>::instance.map(
+                            gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
+                        *(uint32_t *)&s.data[s.length - bs.pixel_width()] = mapped.swapped();
+                    }
+                    break;
+                case 1:
+                    for (int y = 0; y < m_spectrogram.dimensions().height; ++y) {
+                        gfx::gfx_span s = bs.span(gfx::point16(0,y));
+                        memmove(s.data, s.data + bs.pixel_width(), s.length - bs.pixel_width());;
+                        analyzer_palette<typename screen_t::pixel_type>::instance.map(
+                            gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
+                        s.data[s.length - bs.pixel_width()] = mapped.swapped();
+                    }
+                    break;
+                case 8:
+                    for (int y = 0; y < m_spectrogram.dimensions().height; ++y) {
+                        gfx::gfx_span s = bs.span(gfx::point16(0,y));
+                        memmove(s.data, s.data + bs.pixel_width(), s.length - bs.pixel_width());;
+                        analyzer_palette<typename screen_t::pixel_type>::instance.map(
+                            gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
+                        *(uint64_t *)&s.data[s.length - bs.pixel_width()] = mapped.swapped();
+                    }
+                    break;
+            
             }
         }
     }
@@ -224,21 +262,23 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             // show in green if it's on ac power.
         constexpr static const gfx::rgb_pixel<16> green(0,63,0);
         constexpr static const gfx::rgb_pixel<16> red(31,0,0);
-        auto px = m_power_ac?green:white;
-        if(!m_power_ac && m_power_level<25) {
-            px=red;
-        }
-        if(clip.intersects(gfx::srect16(0,0,27,24))) {
-            // draw an empty battery
-            gfx::const_bitmap<gfx::alpha_pixel<8>> cico({27,24},faBatteryEmpty);
-            gfx::draw::icon(destination,gfx::spoint16::zero(),cico,px);
-            // now fill it up
-            if(m_power_level==100) {
-                // if we're at 100% fill the entire thing
-                gfx::draw::filled_rectangle(destination,gfx::srect16(3,7,22,16),px);
-            } else {
-                // otherwise leave a small border
-                gfx::draw::filled_rectangle(destination,gfx::srect16(4,9,4+(0.18f*m_power_level),14),px);
+        if(!m_power_ac) {
+            if(clip.intersects(gfx::srect16(0,0,27,24))) {
+                auto px = white;
+                if(!m_power_ac && m_power_level<25) {
+                    px=red;
+                }   
+                // draw an empty battery
+                gfx::const_bitmap<gfx::alpha_pixel<8>> cico({27,24},faBatteryEmpty);
+                gfx::draw::icon(destination,gfx::spoint16::zero(),cico,px);
+                // now fill it up
+                if(m_power_level==100) {
+                    // if we're at 100% fill the entire thing
+                    gfx::draw::filled_rectangle(destination,gfx::srect16(3,7,22,16),px);
+                } else {
+                    // otherwise leave a small border
+                    gfx::draw::filled_rectangle(destination,gfx::srect16(4,9,4+(0.18f*m_power_level),14),px);
+                }
             }
         }
         const float x_step = 4 * ((float)destination.dimensions().width / (float)window_size);
