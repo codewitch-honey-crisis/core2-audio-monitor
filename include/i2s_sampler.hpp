@@ -57,7 +57,7 @@ template<size_t WindowSize> class i2s_sampler {
 #endif
     static void i2s_reader_task(void *param) {
         i2s_sampler *sampler = (i2s_sampler *)param;
-        const int maxBlockTime = pdMS_TO_TICKS(100);
+        const int maxBlockTime = 0;
         while (true) {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
             if(pdFALSE== xSemaphoreTake(sampler->m_i2sSemaphore, maxBlockTime)) {
