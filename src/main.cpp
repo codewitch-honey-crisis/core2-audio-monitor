@@ -311,9 +311,6 @@ void setup() {
     setCpuFrequencyMhz(240);
     Serial.begin(115200);
 #else
-void uix_on_yield(void* state) {
-    taskYIELD();
-}
 extern "C" void app_main() {
 #endif
     power.initialize();
@@ -324,9 +321,6 @@ extern "C" void app_main() {
     disp.buffer_size(lcd_transfer_buffer_size);
     disp.buffer1(lcd_transfer_buffer);
     disp.buffer2(lcd_transfer_buffer2);
-#ifndef ARDUINO
-    disp.on_yield_callback(uix_on_yield);
-#endif
     disp.on_flush_callback(uix_on_flush);
     disp.on_touch_callback(uix_on_touch);
     main_screen.dimensions({320,240});
