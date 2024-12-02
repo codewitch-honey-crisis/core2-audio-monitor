@@ -54,7 +54,7 @@ using namespace uix;
 
 // lcd data
 // This works out to be 16KB (x2 w/ DMA)
-static const size_t lcd_transfer_buffer_size = 16*1024;
+static const size_t lcd_transfer_buffer_size = bitmap<rgb_pixel<16>>::sizeof_buffer({320,48});
 // for sending data to the display
 static uint8_t *lcd_transfer_buffer = nullptr;
 static uint8_t *lcd_transfer_buffer2 = nullptr;
