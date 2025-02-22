@@ -284,7 +284,10 @@ static void drawing_task(void *param) {
             disp.update();
             uint32_t end_ts = millis();
             ms += (end_ts - start_ts);
-            ++frames;
+            if(!disp.flush_pending()) {
+                ++frames;
+            }
+        
             if (millis() >= fps_ts + 1000) {
                 main_analyzer.power_level(power.battery_level());
                 main_analyzer.power_ac(power.ac_in());
@@ -296,7 +299,7 @@ static void drawing_task(void *param) {
                 } else {
                     const int fps = roundf(1000.0f/((float)(ms/(float)frames)));
                     const int ms_avg = ms/frames;
-                    main_analyzer.fps(frames);
+                    main_analyzer.fps(fps);
                     printf("Total FPS: %d / Render FPS: %d, Avg render time: %dms\n",frames,fps,(int)ms_avg);
                     frames = 0;
                 }
