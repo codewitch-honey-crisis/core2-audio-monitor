@@ -86,12 +86,6 @@ static void uix_on_flush(const rect16& bounds,
 // for performance and flash size reasons
 // here we use the ESP LCD Panel API for it
 static void lcd_panel_init() {
-#ifdef LCD_PIN_NUM_BCKL
-    if(LCD_PIN_NUM_BCKL>-1) {
-        gpio_set_direction((gpio_num_t)LCD_PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
-        gpio_set_level((gpio_num_t)4, LCD_BCKL_OFF_LEVEL);
-    }
-#endif
     // configure the SPI bus
     spi_bus_config_t buscfg;
     memset(&buscfg, 0, sizeof(buscfg));
@@ -163,11 +157,6 @@ static void lcd_panel_init() {
 #else
     esp_lcd_panel_disp_off(lcd_handle, false);
 #endif
-#ifdef LCD_PIN_NUM_BCKL
-    // Turn on backlight (Different LCD screens may need different levels)
-    if(LCD_PIN_NUM_BCKL>-1) gpio_set_level((gpio_num_t)4, LCD_BCKL_ON_LEVEL);
-#endif
-
     // initialize the transfer buffers
     lcd_transfer_buffer = (uint8_t *)malloc(lcd_transfer_buffer_size);
     if (lcd_transfer_buffer == nullptr) {
@@ -281,10 +270,11 @@ static void drawing_task(void *param) {
         if (ulNotificationValue != 0) {
             uint32_t start_ts = millis();
             main_analyzer.invalidate();
+            ++frames;
+            
             disp.update();
             uint32_t end_ts = millis();
             ms += (end_ts - start_ts);
-            ++frames;
             
             if (millis() >= fps_ts + 1000) {
                 main_analyzer.power_level(power.battery_level());
@@ -297,7 +287,7 @@ static void drawing_task(void *param) {
                 } else {
                     const int ms_avg = ms/frames;
                     main_analyzer.fps(frames);
-                    printf("Total FPS: %d / Avg render time: %dms\n",frames,(int)ms_avg);
+                    printf("Total FPS: %d / Avg render time: %0.2fms\n",frames,ms_avg);
                     frames = 0;
                 }
                 

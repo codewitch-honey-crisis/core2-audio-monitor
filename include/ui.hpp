@@ -41,10 +41,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             m_fps_bounds = gfx::srect16(this->dimensions().width-area.width-2,0,this->dimensions().width-1,area.height);
         }
     }
-   public:
-    analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
-        : base_type(parent, palette), m_spectrogram({0, 0}, nullptr), m_fps_font(nullptr), m_fps(0), m_power_level(0),m_power_ac(true) {
-        
+    void init() {
         for (int i = 0; i < window_size; i++) {
             m_bar_chart[i] = 0.0f;
         }
@@ -52,14 +49,15 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
             m_bar_chart_peaks[i] = 0.0f;
         }
     }
+   public:
+    analyzer_box(uix::invalidation_tracker &parent, const palette_type *palette = nullptr)
+        : base_type(parent, palette), m_spectrogram({0, 0}, nullptr), m_fps_font(nullptr), m_fps(0), m_power_level(0),m_power_ac(true) {
+        init();
+        
+    }
     analyzer_box()
         : base_type(), m_spectrogram({0, 0}, nullptr), m_fps_font(nullptr), m_fps(0) ,m_power_level(0),m_power_ac(true){
-        for (int i = 0; i < window_size; i++) {
-            m_bar_chart[i] = 0.0f;
-        }
-        for (int i = 0; i < window_size; i++) {
-            m_bar_chart_peaks[i] = 0.0f;
-        }
+        init();
     }
     analyzer_box(analyzer_box &&rhs) {
         m_state = 0;
