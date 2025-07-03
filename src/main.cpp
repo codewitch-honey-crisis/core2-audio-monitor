@@ -254,13 +254,13 @@ static void processing_task(void *param) {
             main_processor.update(input);
             main_analyzer.samples(main_processor.samples());
             main_analyzer.fft(main_processor.fft());
-            
+            main_analyzer.extents(main_processor.sample_min(),main_processor.sample_max());
             xTaskNotify(drawing_task_handle, 1, eIncrement);
         }
     }
 }
 static void drawing_task(void *param) {
-    const TickType_t xMaxBlockTime = pdMS_TO_TICKS(1000);
+    const TickType_t xMaxBlockTime = pdMS_TO_TICKS(10);
     int frames = 0;
     uint32_t fps_ts = millis();
     unsigned long ms = 0;
@@ -268,13 +268,9 @@ static void drawing_task(void *param) {
         // wait to be told to redraw
         uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
         if (ulNotificationValue != 0) {
-            uint32_t start_ts = millis();
             main_analyzer.invalidate();
             ++frames;
-            
             disp.update();
-            uint32_t end_ts = millis();
-            ms += (end_ts - start_ts);
             
             if (millis() >= fps_ts + 1000) {
                 main_analyzer.power_level(power.battery_level());
@@ -282,12 +278,11 @@ static void drawing_task(void *param) {
             
                 fps_ts = millis();
                 if(frames==0) {
-                    printf("Total FPS: < 1 / Render time: %d ms\n",(int)ms);    
+                    puts("Total FPS: < 1");
                     main_analyzer.fps(0);
                 } else {
-                    const int ms_avg = ms/frames;
                     main_analyzer.fps(frames);
-                    printf("Total FPS: %d / Avg render time: %0.2fms\n",frames,ms_avg);
+                    printf("Total FPS: %d\n",frames);
                     frames = 0;
                 }
                 

@@ -16,6 +16,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
 
    private:
     float m_samples[window_size];
+    float m_min, m_max;
     float m_samples_buffer[window_size];
     float m_fft[window_size];
     float m_bar_chart[window_size];
@@ -84,6 +85,10 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
     }
     void samples(const float *values) {
         memcpy(m_samples, values, window_size * sizeof(float));
+    }
+    void extents(float min_val, float max_val) {
+        m_min = min_val;
+        m_max = max_val;
     }
     const float *fft() const {
         return m_fft;
@@ -292,6 +297,7 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                             waveform_color);
             sample_x += x_step;
         }
+    
     }
 };
 using analyzer_box_t = analyzer_box<typename screen_t::control_surface_type>;
