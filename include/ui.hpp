@@ -159,7 +159,11 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                         memmove(s.data, s.data + bs.pixel_width(), s.length - bs.pixel_width());;
                         analyzer_palette<typename screen_t::pixel_type>::instance.map(
                             gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
+#ifndef HTCW_GFX_NO_SWAP
                         *(uint16_t *)&s.data[s.length - bs.pixel_width()] = mapped.swapped();
+#else
+                        *(uint16_t *)&s.data[s.length - bs.pixel_width()] = mapped;
+#endif
                     }
                     break;
                 case 4:
@@ -168,7 +172,11 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                         memmove(s.data, s.data + bs.pixel_width(), s.length - bs.pixel_width());;
                         analyzer_palette<typename screen_t::pixel_type>::instance.map(
                             gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
+#ifndef HTCW_GFX_NO_SWAP
                         *(uint32_t *)&s.data[s.length - bs.pixel_width()] = mapped.swapped();
+#else
+                        *(uint32_t *)&s.data[s.length - bs.pixel_width()] = mapped;
+#endif
                     }
                     break;
                 case 1:
@@ -177,7 +185,11 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                         memmove(s.data, s.data + bs.pixel_width(), s.length - bs.pixel_width());;
                         analyzer_palette<typename screen_t::pixel_type>::instance.map(
                             gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
+#ifndef HTCW_GFX_NO_SWAP
                         s.data[s.length - bs.pixel_width()] = mapped.swapped();
+#else
+                        s.data[s.length - bs.pixel_width()] = mapped;
+#endif
                     }
                     break;
                 case 8:
@@ -186,7 +198,11 @@ class analyzer_box : public uix::control<ControlSurfaceType> {
                         memmove(s.data, s.data + bs.pixel_width(), s.length - bs.pixel_width());;
                         analyzer_palette<typename screen_t::pixel_type>::instance.map(
                             gfx::helpers::clamp((int)m_fft[m_spectrogram.dimensions().height - y - 1],0,255),&mapped);
+#ifndef HTCW_GFX_NO_SWAP
                         *(uint64_t *)&s.data[s.length - bs.pixel_width()] = mapped.swapped();
+#else
+                        *(uint64_t *)&s.data[s.length - bs.pixel_width()] = mapped;
+#endif
                     }
                     break;
             

@@ -263,15 +263,15 @@ static void drawing_task(void *param) {
     const TickType_t xMaxBlockTime = pdMS_TO_TICKS(10);
     int frames = 0;
     uint32_t fps_ts = millis();
-    unsigned long ms = 0;
     while (true) {
         // wait to be told to redraw
         uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
         if (ulNotificationValue != 0) {
-            main_analyzer.invalidate();
-            ++frames;
+            if(!disp.flush_pending()) { 
+                main_analyzer.invalidate();
+                ++frames;
+            }
             disp.update();
-            
             if (millis() >= fps_ts + 1000) {
                 main_analyzer.power_level(power.battery_level());
                 main_analyzer.power_ac(power.ac_in());
@@ -285,8 +285,6 @@ static void drawing_task(void *param) {
                     printf("Total FPS: %d\n",frames);
                     frames = 0;
                 }
-                
-                ms = 0;
             }
         }
     }
