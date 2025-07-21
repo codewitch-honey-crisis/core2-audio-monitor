@@ -267,11 +267,11 @@ static void drawing_task(void *param) {
         // wait to be told to redraw
         uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
         if (ulNotificationValue != 0) {
-            if(!disp.flush_pending()) { 
+            if(!disp.dirty()) { 
                 main_analyzer.invalidate();
                 ++frames;
             }
-            disp.update();
+            disp.update(false);
             if (millis() >= fps_ts + 1000) {
                 main_analyzer.power_level(power.battery_level());
                 main_analyzer.power_ac(power.ac_in());
